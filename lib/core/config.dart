@@ -1,0 +1,1 @@
+const String baseUrl = "http://10.0.2.2/geo_little_paws_api/";
