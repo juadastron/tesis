@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pages/login_page.dart'; // Asegúrate que el nombre coincida con tu archivo
+import 'pages/home_page.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +19,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         fontFamily: 'Montserrat',
       ),
-      home: const LoginScreen(), // <- Esta es tu pantalla de inicio
+      home: const LoginScreen(),
+      routes: {'/home': (context) => const HomePage()},
     );
   }
 }
