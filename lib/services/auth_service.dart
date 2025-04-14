@@ -33,7 +33,7 @@ Future<bool> loginUsuario(BuildContext context, String email, String password) a
   return false;
 }
 
-Future<bool> registrarUsuario(String nombre, String email, String password) async {
+Future<bool> registrarUsuario(String nombre, String email, String password, String rol) async {
   final url = Uri.parse("${baseUrl}registro.php");
 
   final response = await http.post(
@@ -43,7 +43,7 @@ Future<bool> registrarUsuario(String nombre, String email, String password) asyn
       "nombre": nombre,
       "email": email,
       "password": password,
-      "rol": "admin", // o "usuario"
+      "rol": rol, // o "usuario"
     }),
   );
 
