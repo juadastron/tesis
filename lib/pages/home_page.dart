@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/services/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../services/auth_service.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Simulación del rol. En producción esto vendría del login o backend
-    final String? userRole = globalUserRole; // Cambia a 'voluntario' para probar
+    final String? userRole = globalUserRole; // Rol desde la API
 
     return Scaffold(
       appBar: AppBar(

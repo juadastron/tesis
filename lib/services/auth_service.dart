@@ -20,7 +20,7 @@ Future<bool> loginUsuario(String email, String password) async {
     final data = jsonDecode(response.body);
 
     if (data["success"] == true) {
-      globalUserRole = data["rol"]; // ✅ guardamos el rol
+      globalUserRole = data["rol"]; // guardamos el rol
       return true;
     }
   }
