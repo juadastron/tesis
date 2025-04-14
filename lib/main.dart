@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
-import 'pages/login_page.dart'; // Asegúrate que el nombre coincida con tu archivo
+import 'package:provider/provider.dart';
+import 'providers/user_provider.dart';
+import 'pages/login_page.dart';
 import 'pages/home_page.dart';
 
-
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [ChangeNotifierProvider(create: (_) => UserProvider())],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

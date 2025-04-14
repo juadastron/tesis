@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../services/auth_service.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+
+
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final String? userRole = globalUserRole; // Rol desde la API
+  final user = Provider.of<UserProvider>(context);
+  final String? userRole = user.rol; // Rol desde la API
 
     return Scaffold(
       appBar: AppBar(

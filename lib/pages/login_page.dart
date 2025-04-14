@@ -27,10 +27,7 @@ class _LoginScreenState extends State<LoginScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [
-                  Color(0xFF2C2C2C),
-                  Color(0xFF4A4A4A),
-                ],
+                colors: [Color(0xFF2C2C2C), Color(0xFF4A4A4A)],
               ),
             ),
           ),
@@ -41,10 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
             right: 40,
             child: Opacity(
               opacity: 0.3,
-              child: Image.asset(
-                'assets/images/patita.png',
-                width: 110,
-              ),
+              child: Image.asset('assets/images/patita.png', width: 110),
             ),
           ),
           Positioned(
@@ -52,10 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
             left: 40,
             child: Opacity(
               opacity: 0.7,
-              child: Image.asset(
-                'assets/images/patita.png',
-                width: 110,
-              ),
+              child: Image.asset('assets/images/patita.png', width: 110),
             ),
           ),
 
@@ -185,15 +176,15 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: ElevatedButton(
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            final success =
-                                await loginUsuario(email, password);
+                            final success = await loginUsuario(context, email, password);
                             if (success) {
                               Navigator.pushReplacementNamed(context, '/home');
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content:
-                                      Text('Correo o contraseña incorrectos'),
+                                  content: Text(
+                                    'Correo o contraseña incorrectos',
+                                  ),
                                 ),
                               );
                             }

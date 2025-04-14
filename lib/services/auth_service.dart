@@ -1,10 +1,12 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+
 import '../core/config.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 
-String? globalUserRole; // 🔐 Aquí guardamos el rol para usarlo en HomePage
-
-Future<bool> loginUsuario(String email, String password) async {
+Future<bool> loginUsuario(BuildContext context, String email, String password) async {
   final url = Uri.parse("${baseUrl}login.php");
 
   final response = await http.post(
@@ -18,9 +20,12 @@ Future<bool> loginUsuario(String email, String password) async {
 
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
-
     if (data["success"] == true) {
-      globalUserRole = data["rol"]; // guardamos el rol
+      Provider.of<UserProvider>(context, listen: false).setUser(
+        nombre: data["nombre"],
+        email: data["email"],
+        rol: data["rol"],
+      );
       return true;
     }
   }
