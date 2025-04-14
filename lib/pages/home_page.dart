@@ -12,7 +12,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
   final user = Provider.of<UserProvider>(context);
-  final String? userRole = user.rol; // Rol desde la API
+  final String? userRole = user.rol; // Rol deeesde la API
 
     return Scaffold(
       appBar: AppBar(
