@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../core/config.dart';
 
+String? globalUserRole; // 🔐 Aquí guardamos el rol para usarlo en HomePage
+
 Future<bool> loginUsuario(String email, String password) async {
   final url = Uri.parse("${baseUrl}login.php");
+
   final response = await http.post(
     url,
     headers: {"Content-Type": "application/json"},
@@ -13,15 +16,17 @@ Future<bool> loginUsuario(String email, String password) async {
     }),
   );
 
-  final data = jsonDecode(response.body);
-  if (data["success"] == true) {
-    return true; 
-    // Aquí podrías navegar al HomeScreen con Navigator.push()
-  } else {
-    return false;
-  }
-}
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
 
+    if (data["success"] == true) {
+      globalUserRole = data["rol"]; // ✅ guardamos el rol
+      return true;
+    }
+  }
+
+  return false;
+}
 
 Future<bool> registrarUsuario(String nombre, String email, String password) async {
   final url = Uri.parse("${baseUrl}registro.php");
