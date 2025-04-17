@@ -32,22 +32,3 @@ Future<bool> loginUsuario(BuildContext context, String email, String password) a
 
   return false;
 }
-
-Future<bool> registrarUsuario(String nombre, String email, String password, String rol) async {
-  final url = Uri.parse("${baseUrl}registro.php");
-
-  final response = await http.post(
-    url,
-    headers: {"Content-Type": "application/json"},
-    body: jsonEncode({
-      "nombre": nombre,
-      "email": email,
-      "password": password,
-      "rol": rol, // o "usuario"
-    }),
-  );
-
-  final data = jsonDecode(response.body);
-
-  return data["success"] == true;
-}
