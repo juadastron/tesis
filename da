@@ -1,0 +1,77 @@
+[33mcommit cb6965af0455d8f4ed9fb27c96b5d530e2f93970[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdesarrollo[m[33m, [m[1;31morigin/desarrollo[m[33m)[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Fri Apr 25 03:58:47 2025 -0500
+
+    requisito de crear perfil animal y asignar dispositivo completado
+
+[33mcommit 09f832b8d05414739f4299b3a28ae48e89d5950b[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Fri Apr 25 02:12:37 2025 -0500
+
+    nueva interfaz del login
+
+[33mcommit ca09eb677712f771af9afda5064f37a904c400d5[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Thu Apr 17 05:24:53 2025 -0500
+
+    interfaz para la parte de usuarios con todo funcional
+
+[33mcommit ad244548c832babb8d41c98b9f70f71806fed72e[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Thu Apr 17 02:02:24 2025 -0500
+
+    interfaz para la parte de usuarios
+
+[33mcommit 36121c542fd4e695c1ac2dc908854827fe9201ba[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Mon Apr 14 04:26:43 2025 -0500
+
+    tenenemos agregado la api key de google y puesto para con un choose box escoger el dispositivo que queramos
+
+[33mcommit e4f5f54b766713d41f18183e067103cec9bb6590[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Mon Apr 14 03:04:08 2025 -0500
+
+    modifique para que el rol no este quemado y sea dinámico
+
+[33mcommit c1880e75495492bb384f999863ce9daeabd6bc52[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Mon Apr 14 02:54:59 2025 -0500
+
+    agregamos rutas y creamos todas las paginas las cuales usaran los diferentes botones
+
+[33mcommit 25294dbadc8725f11d39c1e58c3b70fb251b4c0c[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Mon Apr 14 02:37:56 2025 -0500
+
+    cambie algunas cosas para poder mantener la sesion inicada y ya no configurar variables globales
+
+[33mcommit ca2454348b043dd194f9590ab577b679dff87048[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Mon Apr 14 02:22:01 2025 -0500
+
+    cambio en los roles para que solo admin pueda ver lo que le compete
+
+[33mcommit eb015748d1ae9e170858fb6abe80c9f797309857[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Mon Apr 14 02:15:24 2025 -0500
+
+    tienes el menu luego de ingresar a la app y la logica para unicamente los admins puedan ver todas las funciones
+
+[33mcommit d02ece2ccf0b14913bc9678d59b6ef2a5f674f69[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Mon Apr 14 02:06:15 2025 -0500
+
+    aqui estas ya con la lógica lista para detectar usuarios admins y voluntarios y tiene las patitas de fondo en el login
+
+[33mcommit ab8f81026c043504b7f40aee5c4b76c80dcbf79d[m[33m ([m[1;31morigin/main[m[33m)[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Sat Apr 12 01:35:02 2025 -0500
+
+    aqui ya tiene hecho la parte del login
+
+[33mcommit e5e067beccdf2ad3343c9606894dc85e91efe40c[m
+Author: juan <juan.d.carreno@unl.edu.ec>
+Date:   Sat Apr 12 00:43:15 2025 -0500
+
+    aqui esta hecho la conexion a bdd y tiene la parte de la interfaz del login

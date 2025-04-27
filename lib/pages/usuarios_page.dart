@@ -212,7 +212,9 @@ class _UsuariosPageState extends State<UsuariosPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Usuarios Registrados' , style: GoogleFonts.montserrat()),
+        title: Text('Usuarios Registrados' , style: GoogleFonts.montserrat(
+          color: const Color.fromARGB(255, 255, 255, 255),
+        )),
         backgroundColor: const Color(0xFF6A1B9A),
       ),
       body: FutureBuilder<List<Usuario>>(

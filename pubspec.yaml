@@ -68,6 +68,7 @@ flutter:
       - assets/images/fondo.png
       - assets/images/patita.png
       - assets/images/dormido.gif
+      - assets/images/64.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

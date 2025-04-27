@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         const FaIcon(
                           FontAwesomeIcons.paw,
-                          color: Color(0xFF6A1B9A), // Púrpura
+                          color: Color.fromARGB(255, 70, 117, 192), // Púrpura
                           size: 26,
                         ),
                         const SizedBox(width: 8),
@@ -93,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const Icon(
                           Icons.location_on_outlined,
-                          color: Color(0xFF6A1B9A), // Púrpura
+                          color: Color.fromARGB(255, 70, 117, 192), // Púrpura
                           size: 28,
                         ),
                       ],
@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Center(
                             child: FaIcon(
                               FontAwesomeIcons.dog,
-                              color: Color.fromARGB(255, 123, 164, 230), // Azul claro
+                              color: Color.fromARGB(255, 70, 117, 192), // Azul claro
                             ),
                           ),
                         ),
@@ -154,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: Center(
                             child: FaIcon(
                               FontAwesomeIcons.lock,
-                              color: Color.fromARGB(255, 123, 164, 230), // Azul claro
+                              color: Color.fromARGB(255, 70, 117, 192), // Azul claro
                             ),
                           ),
                         ),

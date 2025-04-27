@@ -4,6 +4,8 @@ class Dispositivo {
   final String estadoActual;
   final String? ultimaConexion;
   final String? creadoEn;
+  final String? nombreAnimal;
+  final String? especieAnimal;
 
   Dispositivo({
     this.id,
@@ -11,6 +13,8 @@ class Dispositivo {
     required this.estadoActual,
     this.ultimaConexion,
     this.creadoEn,
+    this.nombreAnimal,
+    this.especieAnimal,
   });
 
   factory Dispositivo.fromJson(Map<String, dynamic> json) {
@@ -20,6 +24,8 @@ class Dispositivo {
       estadoActual: json['estado_actual'],
       ultimaConexion: json['ultima_conexion'],
       creadoEn: json['creado_en'],
+      nombreAnimal: json['nombre_animal'],
+      especieAnimal: json['especie_animal'],
     );
   }
 

@@ -3,8 +3,9 @@ import 'package:flutter_application_1/services/asignacion_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/animal_model.dart';
 import '../services/animal_service.dart';
-import '../services/dispositivo_service.dart'; // donde esté tu método obtenerDispositivosDisponibles()
-import '../models/dispositivo_model.dart'; // tu modelo de dispositivo
+import '../services/dispositivo_service.dart';
+import '../models/dispositivo_model.dart';
+import '../services/asignacion_service.dart';
 
 class AnimalesPage extends StatefulWidget {
   const AnimalesPage({super.key});
@@ -19,7 +20,8 @@ class _AnimalesPageState extends State<AnimalesPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Animales Registrados', style: GoogleFonts.montserrat()),
-        backgroundColor: const Color(0xFF6A1B9A),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        foregroundColor: const Color(0xFF6A1B9A),
       ),
       body: FutureBuilder<List<Animal>>(
         future: obtenerAnimales(),
@@ -47,90 +49,185 @@ class _AnimalesPageState extends State<AnimalesPage> {
           return ListView.builder(
             itemCount: animales.length,
             itemBuilder: (context, index) {
-              final animal = animales[index];
-              return ListTile(
-                title: Text(
-                  animal.nombre,
-                  style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  '${animal.especie} | Edad: ${animal.edad ?? "N/D"} | Color: ${animal.color ?? "N/D"}',
-                  style: GoogleFonts.montserrat(),
-                ),
-                trailing: Wrap(
-                  spacing: 8,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.link, color: Colors.green),
-                      tooltip: 'Asignar dispositivo',
-                      onPressed: () {
-                        mostrarAsignarDispositivo(
-                          context,
-                          animal.id!,
-                        ); // 👈 Función que crearemos
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.orange),
-                      onPressed: () {
-                        mostrarEditarAnimal(context, animal, () {
-                          setState(() {});
-                        });
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () async {
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder:
-                              (ctx) => AlertDialog(
-                                title: Text(
-                                  'Confirmar',
-                                  style: GoogleFonts.montserrat(),
-                                ),
-                                content: Text(
-                                  '¿Deseas eliminar este animal?',
-                                  style: GoogleFonts.montserrat(),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: Text(
-                                      'Cancelar',
-                                      style: GoogleFonts.montserrat(),
-                                    ),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: Text(
-                                      'Eliminar',
-                                      style: GoogleFonts.montserrat(),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                        );
+              final animal = animales[index]; // 🔥 Aquí corregimos
 
-                        if (confirm == true) {
-                          final eliminado = await eliminarAnimal(animal.id!);
-                          if (eliminado) {
-                            setState(() {});
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  "Error al eliminar",
-                                  style: GoogleFonts.montserrat(),
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                      },
+              return FutureBuilder<Map<String, dynamic>?>(
+                future: obtenerAsignacionAnimal(animal.id!),
+                builder: (context, asignacionSnapshot) {
+                  final asignacion = asignacionSnapshot.data;
+
+                  return ListTile(
+                    title: Text(
+                      animal.nombre,
+                      style: GoogleFonts.montserrat(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ],
-                ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${animal.especie} | Edad: ${animal.edad ?? "N/D"} | Color: ${animal.color ?? "N/D"}',
+                          style: GoogleFonts.montserrat(),
+                        ),
+                        if (asignacion != null)
+                          Text(
+                            'Collar: IMEI ${asignacion["imei"]} | Desde: ${asignacion["fecha_inicio"].toString().split(" ")[0]}',
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
+                          ),
+                      ],
+                    ),
+                    trailing: Wrap(
+                      spacing: 8,
+                      children: [
+                        IconButton(
+                          icon:
+                              asignacion == null
+                                  ? const Icon(Icons.link, color: Colors.green)
+                                  : const Icon(
+                                    Icons.link_off,
+                                    color: Colors.redAccent,
+                                  ),
+                          tooltip:
+                              asignacion == null
+                                  ? 'Asignar dispositivo'
+                                  : 'Desvincular dispositivo',
+                          onPressed: () async {
+                            if (asignacion == null) {
+                              mostrarAsignarDispositivo(context, animal.id!);
+                            } else {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder:
+                                    (ctx) => AlertDialog(
+                                      title: Text(
+                                        'Desvincular Collar',
+                                        style: GoogleFonts.montserrat(),
+                                      ),
+                                      content: Text(
+                                        '¿Deseas desvincular el dispositivo de este animal?',
+                                        style: GoogleFonts.montserrat(),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(ctx, false),
+                                          child: Text(
+                                            'Cancelar',
+                                            style: GoogleFonts.montserrat(),
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed:
+                                              () => Navigator.pop(ctx, true),
+                                          child: Text(
+                                            'Desvincular',
+                                            style: GoogleFonts.montserrat(),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                              );
+
+                              if (confirm == true) {
+                                final exito =
+                                    await desvincularDispositivoAnimal(
+                                      asignacion["id_asignacion"],
+                                    );
+                                if (exito) {
+                                  setState(() {});
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Collar desvinculado correctamente',
+                                        style: GoogleFonts.montserrat(),
+                                      ),
+                                    ),
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Error al desvincular',
+                                        style: GoogleFonts.montserrat(),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              }
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.orange),
+                          onPressed: () {
+                            mostrarEditarAnimal(context, animal, () {
+                              setState(() {});
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder:
+                                  (ctx) => AlertDialog(
+                                    title: Text(
+                                      'Eliminar Animal',
+                                      style: GoogleFonts.montserrat(),
+                                    ),
+                                    content: Text(
+                                      '¿Deseas eliminar este animal?',
+                                      style: GoogleFonts.montserrat(),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.pop(ctx, false),
+                                        child: Text(
+                                          'Cancelar',
+                                          style: GoogleFonts.montserrat(),
+                                        ),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed:
+                                            () => Navigator.pop(ctx, true),
+                                        child: Text(
+                                          'Eliminar',
+                                          style: GoogleFonts.montserrat(),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                            );
+
+                            if (confirm == true) {
+                              final eliminado = await eliminarAnimal(
+                                animal.id!,
+                              );
+                              if (eliminado) {
+                                setState(() {});
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Error al eliminar',
+                                      style: GoogleFonts.montserrat(),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
               );
             },
           );
@@ -157,7 +254,7 @@ void mostrarAsignarDispositivo(BuildContext context, int idAnimal) {
     context: context,
     builder: (ctx) {
       return FutureBuilder<List<Dispositivo>>(
-        future: obtenerDispositivosDisponibles(), // debe retornar solo los disponibles
+        future: obtenerDispositivos(), // debe retornar solo los disponibles
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const AlertDialog(
@@ -166,16 +263,24 @@ void mostrarAsignarDispositivo(BuildContext context, int idAnimal) {
           } else if (snapshot.hasError) {
             return AlertDialog(
               title: Text('Error', style: GoogleFonts.montserrat()),
-              content: Text('No se pudieron cargar los dispositivos.', style: GoogleFonts.montserrat()),
+              content: Text(
+                'No se pudieron cargar los dispositivos.',
+                style: GoogleFonts.montserrat(),
+              ),
             );
           }
-
-          final dispositivos = snapshot.data ?? [];
+          final disponibles =
+              (snapshot.data ?? [])
+                  .where((d) => d.estadoActual == 'disponible')
+                  .toList();
 
           return StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
-                title: Text('Asignar dispositivo', style: GoogleFonts.montserrat()),
+                title: Text(
+                  'Asignar dispositivo',
+                  style: GoogleFonts.montserrat(),
+                ),
                 content: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -185,12 +290,16 @@ void mostrarAsignarDispositivo(BuildContext context, int idAnimal) {
                         labelStyle: GoogleFonts.montserrat(),
                       ),
                       value: dispositivoSeleccionado,
-                      items: dispositivos.map((dispositivo) {
-                        return DropdownMenuItem(
-                          value: dispositivo,
-                          child: Text('IMEI: ${dispositivo.imei}', style: GoogleFonts.montserrat()),
-                        );
-                      }).toList(),
+                      items:
+                          disponibles.map((dispositivo) {
+                            return DropdownMenuItem(
+                              value: dispositivo,
+                              child: Text(
+                                'IMEI: ${dispositivo.imei}',
+                                style: GoogleFonts.montserrat(),
+                              ),
+                            );
+                          }).toList(),
                       onChanged: (value) {
                         setState(() {
                           dispositivoSeleccionado = value;
@@ -209,19 +318,27 @@ void mostrarAsignarDispositivo(BuildContext context, int idAnimal) {
                       if (dispositivoSeleccionado == null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('Debes seleccionar un dispositivo', style: GoogleFonts.montserrat()),
+                            content: Text(
+                              'Debes seleccionar un dispositivo',
+                              style: GoogleFonts.montserrat(),
+                            ),
                           ),
                         );
                         return;
                       }
 
-                      final exito = await asignarDispositivoAnimal(idAnimal, dispositivoSeleccionado!.id!);
+                      final exito = await asignarDispositivoAnimal(
+                        idAnimal,
+                        dispositivoSeleccionado!.id!,
+                      );
                       Navigator.pop(context);
 
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            exito ? 'Dispositivo asignado correctamente' : 'Error al asignar dispositivo',
+                            exito
+                                ? 'Dispositivo asignado correctamente'
+                                : 'Error al asignar dispositivo',
                             style: GoogleFonts.montserrat(),
                           ),
                         ),
@@ -238,7 +355,6 @@ void mostrarAsignarDispositivo(BuildContext context, int idAnimal) {
     },
   );
 }
-
 
 void mostrarCrearAnimal(BuildContext context, VoidCallback onCrear) {
   final nombreController = TextEditingController();
