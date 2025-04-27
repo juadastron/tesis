@@ -38,6 +38,7 @@ dependencies:
   http: ^1.1.0
   provider: ^6.1.1
   google_maps_flutter: ^2.5.3
+  image_picker: ^1.0.4
 
 
 dev_dependencies:
@@ -66,6 +67,8 @@ flutter:
   assets:
       - assets/images/fondo.png
       - assets/images/patita.png
+      - assets/images/dormido.gif
+      - assets/images/64.png
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

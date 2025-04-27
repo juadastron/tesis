@@ -27,7 +27,10 @@ class _LoginScreenState extends State<LoginScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFF2C2C2C), Color(0xFF4A4A4A)],
+                colors: [
+                  Color.fromARGB(255, 255, 255, 255),
+                  Color(0xFFFFF7D4), // Tonos suaves de amarillo
+                ],
               ),
             ),
           ),
@@ -45,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
             top: 70,
             left: 40,
             child: Opacity(
-              opacity: 0.7,
+              opacity: 0.6,
               child: Image.asset('assets/images/patita.png', width: 110),
             ),
           ),
@@ -59,14 +62,24 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset('assets/images/fondo.png', height: 100),
+                    // Logo circular
+                    Container(
+                      decoration: const BoxDecoration(
+                        color: Color.fromARGB(255, 241, 240, 201),
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      child: Image.asset('assets/images/fondo.png', height: 80),
+                    ),
                     const SizedBox(height: 24),
+
+                    // Título y subtítulo
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const FaIcon(
                           FontAwesomeIcons.paw,
-                          color: Colors.white,
+                          color: Color.fromARGB(255, 70, 117, 192), // Púrpura
                           size: 26,
                         ),
                         const SizedBox(width: 8),
@@ -75,30 +88,32 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: GoogleFonts.montserrat(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                            color: Color(0xFF6A1B9A), // Púrpura
                           ),
                         ),
                         const Icon(
                           Icons.location_on_outlined,
-                          color: Colors.white,
+                          color: Color.fromARGB(255, 70, 117, 192), // Púrpura
                           size: 28,
                         ),
                       ],
                     ),
                     const SizedBox(height: 40),
+
+                    // Campo de correo electrónico
                     TextFormField(
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
                         hintText: 'Correo electrónico',
-                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        hintStyle: TextStyle(color: const Color.fromARGB(255, 128, 128, 128)), // Gris oscuro para mayor contraste
                         prefixIcon: const SizedBox(
                           height: 48,
                           width: 48,
                           child: Center(
                             child: FaIcon(
                               FontAwesomeIcons.dog,
-                              color: Color(0xFF6A1B9A),
+                              color: Color.fromARGB(255, 70, 117, 192), // Azul claro
                             ),
                           ),
                         ),
@@ -124,20 +139,22 @@ class _LoginScreenState extends State<LoginScreen> {
                       onChanged: (value) => email = value.trim(),
                     ),
                     const SizedBox(height: 20),
+
+                    // Campo de contraseña
                     TextFormField(
                       obscureText: _obscureText,
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
                         hintText: 'Contraseña',
-                        hintStyle: TextStyle(color: Colors.grey[600]),
+                        hintStyle: TextStyle(color: const Color.fromARGB(255, 128, 128, 128)), // Gris oscuro para mayor contraste
                         prefixIcon: const SizedBox(
                           height: 48,
                           width: 48,
                           child: Center(
                             child: FaIcon(
                               FontAwesomeIcons.lock,
-                              color: Color(0xFF6A1B9A),
+                              color: Color.fromARGB(255, 70, 117, 192), // Azul claro
                             ),
                           ),
                         ),
@@ -171,12 +188,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       onChanged: (value) => password = value,
                     ),
                     const SizedBox(height: 30),
+
+                    // Botón "Ingresar"
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () async {
                           if (_formKey.currentState!.validate()) {
-                            final success = await loginUsuario(context, email, password);
+                            final success = await loginUsuario(
+                              context,
+                              email,
+                              password,
+                            );
                             if (success) {
                               Navigator.pushReplacementNamed(context, '/home');
                             } else {
@@ -191,13 +214,13 @@ class _LoginScreenState extends State<LoginScreen> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF6A1B9A),
+                          backgroundColor: Color(0xFF6A1B9A), // Púrpura
+                          shadowColor: Colors.black.withOpacity(0.2), // Sombra suave
+                          elevation: 4, // Elevación para sombra
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          elevation: 4,
-                          shadowColor: Colors.black54,
                         ),
                         child: const Text(
                           'Ingresar',

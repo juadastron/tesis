@@ -2,6 +2,7 @@ import '../core/config.dart';
 import 'package:flutter/material.dart';
 import '../services/usuarios_service.dart';
 import '../models/usuario_model.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class UsuariosPage extends StatefulWidget {
   const UsuariosPage({super.key});
@@ -25,28 +26,51 @@ void editarUsuarioModal(
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: const Text('Editar Usuario'),
+            title: Text('Editar Usuario', style: GoogleFonts.montserrat()),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nombreController,
-                  decoration: const InputDecoration(labelText: "Nombre"),
+                  decoration: InputDecoration(
+                    labelText: "Nombre",
+                    labelStyle: GoogleFonts.montserrat(), // 👈
+                  ),
                 ),
                 TextField(
                   controller: emailController,
-                  decoration: const InputDecoration(labelText: "Email"),
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    labelStyle: GoogleFonts.montserrat(), // 👈
+                  ),
                 ),
-                TextField(
-                  controller: rolController,
-                  decoration: const InputDecoration(labelText: "Rol"),
+                DropdownButtonFormField<String>(
+                  value: null, // o `rolController.text` si es edición
+                  decoration: InputDecoration(
+                    labelText: "Rol",
+                    labelStyle: GoogleFonts.montserrat(),
+                  ),
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    color: Colors.black,
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                    DropdownMenuItem(
+                      value: 'voluntario',
+                      child: Text('Voluntario'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    rolController.text = value!;
+                  },
                 ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancelar'),
+                child: Text('Cancelar', style: GoogleFonts.montserrat()),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -64,11 +88,16 @@ void editarUsuarioModal(
                     onUpdate();
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Error al actualizar")),
+                      SnackBar(
+                        content: Text(
+                          "Error al actualizar",
+                          style: GoogleFonts.montserrat(),
+                        ),
+                      ),
                     );
                   }
                 },
-                child: const Text("Guardar"),
+                child: Text("Guardar", style: GoogleFonts.montserrat()),
               ),
             ],
           );
@@ -78,10 +107,7 @@ void editarUsuarioModal(
   );
 }
 
-void mostrarFormularioNuevoUsuario(
-  BuildContext context,
-  VoidCallback onCrear,
-) {
+void mostrarFormularioNuevoUsuario(BuildContext context, VoidCallback onCrear) {
   final nombreController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -93,32 +119,58 @@ void mostrarFormularioNuevoUsuario(
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: const Text('Nuevo Usuario'),
+            title: Text('Nuevo Usuario', style: GoogleFonts.montserrat()),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nombreController,
-                  decoration: const InputDecoration(labelText: "Nombre"),
+                  decoration: InputDecoration(
+                    labelText: "Nombre",
+                    labelStyle: GoogleFonts.montserrat(), // 👈
+                  ),
                 ),
                 TextField(
                   controller: emailController,
-                  decoration: const InputDecoration(labelText: "Email"),
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    labelStyle: GoogleFonts.montserrat(), // 👈
+                  ),
                 ),
                 TextField(
                   controller: passwordController,
-                  decoration: const InputDecoration(labelText: "Contraseña"),
+                  decoration: InputDecoration(
+                    labelText: "Contraseña",
+                    labelStyle: GoogleFonts.montserrat(), // 👈
+                  ),
                 ),
-                TextField(
-                  controller: rolController,
-                  decoration: const InputDecoration(labelText: "Rol"),
+                DropdownButtonFormField<String>(
+                  value: null, // o `rolController.text` si es edición
+                  decoration: InputDecoration(
+                    labelText: "Rol",
+                    labelStyle: GoogleFonts.montserrat(),
+                  ),
+                  style: GoogleFonts.montserrat(
+                    fontSize: 14,
+                    color: Colors.black,
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                    DropdownMenuItem(
+                      value: 'voluntario',
+                      child: Text('Voluntario'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    rolController.text = value!;
+                  },
                 ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancelar'),
+                child: Text('Cancelar', style: GoogleFonts.montserrat()),
               ),
               ElevatedButton(
                 onPressed: () async {
@@ -136,11 +188,16 @@ void mostrarFormularioNuevoUsuario(
                     onCrear();
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Error al crear")),
+                      SnackBar(
+                        content: Text(
+                          "Error al crear",
+                          style: GoogleFonts.montserrat(),
+                        ),
+                      ),
                     );
                   }
                 },
-                child: const Text("Guardar"),
+                child: Text("Guardar", style: GoogleFonts.montserrat()),
               ),
             ],
           );
@@ -155,7 +212,9 @@ class _UsuariosPageState extends State<UsuariosPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Usuarios Registrados'),
+        title: Text('Usuarios Registrados' , style: GoogleFonts.montserrat(
+          color: const Color.fromARGB(255, 255, 255, 255),
+        )),
         backgroundColor: const Color(0xFF6A1B9A),
       ),
       body: FutureBuilder<List<Usuario>>(
@@ -164,9 +223,9 @@ class _UsuariosPageState extends State<UsuariosPage> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
+            return Center(child: Text('Error: ${snapshot.error}', style: GoogleFonts.montserrat()));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No hay usuarios registrados.'));
+            return Center(child: Text('No hay usuarios registrados.', style: GoogleFonts.montserrat()));
           }
 
           final usuarios = snapshot.data!;
@@ -176,8 +235,8 @@ class _UsuariosPageState extends State<UsuariosPage> {
             itemBuilder: (context, index) {
               final usuario = usuarios[index];
               return ListTile(
-                title: Text(usuario.nombre),
-                subtitle: Text('${usuario.email} | Rol: ${usuario.rol}'),
+                title: Text(usuario.nombre, style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+                subtitle: Text('${usuario.email} | Rol: ${usuario.rol}', style: GoogleFonts.montserrat()),
                 trailing: Wrap(
                   spacing: 8,
                   children: [
@@ -194,20 +253,23 @@ class _UsuariosPageState extends State<UsuariosPage> {
                       onPressed: () async {
                         final confirm = await showDialog<bool>(
                           context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Confirmar'),
-                            content: const Text('¿Deseas eliminar este usuario?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(ctx, false),
-                                child: const Text('Cancelar'),
+                          builder:
+                              (ctx) => AlertDialog(
+                                title: const Text('Confirmar'),
+                                content: const Text(
+                                  '¿Deseas eliminar este usuario?',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text('Cancelar'),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text('Eliminar'),
+                                  ),
+                                ],
                               ),
-                              ElevatedButton(
-                                onPressed: () => Navigator.pop(ctx, true),
-                                child: const Text('Eliminar'),
-                              ),
-                            ],
-                          ),
                         );
 
                         if (confirm == true) {
@@ -216,7 +278,9 @@ class _UsuariosPageState extends State<UsuariosPage> {
                             setState(() {});
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("Error al eliminar")),
+                              const SnackBar(
+                                content: Text("Error al eliminar"),
+                              ),
                             );
                           }
                         }
@@ -236,7 +300,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
             setState(() {});
           });
         },
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }

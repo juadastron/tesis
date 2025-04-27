@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../services/ubicacion_service.dart'; // 🔥
+import 'package:flutter/foundation.dart'; // 👈 para Factory
+import 'package:flutter/gestures.dart';
+
+BitmapDescriptor? _iconoPatita;
 
 class MapaPage extends StatefulWidget {
   const MapaPage({super.key});
@@ -24,38 +29,50 @@ class _MapaPageState extends State<MapaPage> {
   @override
   void initState() {
     super.initState();
-    _cargarDispositivos();
+    _cargarIcono();
+  _cargarDispositivos();
   }
+
+Future<void> _cargarIcono() async {
+  _iconoPatita = await BitmapDescriptor.fromAssetImage(
+    const ImageConfiguration(size: Size(48, 48)),
+    'assets/images/64.png',
+  );
+}
 
   Future<void> _cargarDispositivos() async {
     try {
-      final response = await http.get(Uri.parse("http://10.0.2.2/geo_little_paws_api/ubicaciones.php"));
-      final data = jsonDecode(response.body);
+      final dispositivosAsignados = await obtenerDispositivosAsignados();
 
-      if (data['success'] == true) {
-        setState(() {
-          _dispositivos = data['dispositivos'];
-          _marcadores = _dispositivos.map((d) {
-            return Marker(
-              markerId: MarkerId(d['id_dispositivo'].toString()),
-              position: LatLng(double.parse(d['latitud']), double.parse(d['longitud'])),
-              infoWindow: InfoWindow(title: d['imei'] ?? 'Dispositivo'),
-            );
-          }).toSet();
-        });
-      } else {
-        print("Error al cargar dispositivos: ${data['message']}");
-      }
+      setState(() {
+        _dispositivos = dispositivosAsignados;
+        _marcadores =
+            _dispositivos.map((d) {
+              return Marker(
+                markerId: MarkerId(d['id_dispositivo'].toString()),
+                position: LatLng(
+                  double.parse(d['latitud']),
+                  double.parse(d['longitud']),
+                ),
+                icon: _iconoPatita ?? BitmapDescriptor.defaultMarker, 
+                infoWindow: InfoWindow(title: d['imei'] ?? 'Dispositivo'),
+              );
+            }).toSet();
+      });
     } catch (e) {
       print("Error: $e");
     }
   }
 
   void _centrarEnDispositivo(String idDispositivo) {
-    final dispositivo = _dispositivos.firstWhere((d) => d['id_dispositivo'].toString() == idDispositivo);
+    final dispositivo = _dispositivos.firstWhere(
+      (d) => d['id_dispositivo'].toString() == idDispositivo,
+    );
     final lat = double.parse(dispositivo['latitud']);
     final lng = double.parse(dispositivo['longitud']);
-    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(LatLng(lat, lng), 17));
+    _mapController?.animateCamera(
+      CameraUpdate.newLatLngZoom(LatLng(lat, lng), 17),
+    );
   }
 
   @override
@@ -73,34 +90,45 @@ class _MapaPageState extends State<MapaPage> {
             onMapCreated: (controller) {
               _mapController = controller;
             },
+            gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+              Factory<OneSequenceGestureRecognizer>(
+                () => EagerGestureRecognizer(),
+              ),
+            },
           ),
-          Positioned(
-            top: 10,
-            left: 15,
-            right: 15,
-            child: Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: DropdownButtonFormField<String>(
-                  value: _dispositivoSeleccionado,
-                  hint: const Text('Seleccionar dispositivo'),
-                  items: _dispositivos.map((d) {
-                    return DropdownMenuItem<String>(
-                      value: d['id_dispositivo'].toString(),
-                      child: Text(d['imei'] ?? 'Dispositivo'),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _dispositivoSeleccionado = value;
-                    });
-                    if (value != null) _centrarEnDispositivo(value);
-                  },
+
+          // 👇 El Dropdown que estará encima y sí recibirá toques
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Material(
+                elevation: 6,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButtonFormField<String>(
+                      value: _dispositivoSeleccionado,
+                      hint: const Text('Seleccionar dispositivo'),
+                      items:
+                          _dispositivos.map((d) {
+                            return DropdownMenuItem<String>(
+                              value: d['id_dispositivo'].toString(),
+                              child: Text(d['imei'] ?? 'Dispositivo'),
+                            );
+                          }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _dispositivoSeleccionado = value;
+                        });
+                        if (value != null) _centrarEnDispositivo(value);
+                      },
+                    ),
+                  ),
                 ),
               ),
             ),
-          )
+          ),
         ],
       ),
     );
