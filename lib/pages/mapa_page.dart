@@ -34,7 +34,7 @@ class _MapaPageState extends State<MapaPage> {
   }
 
 Future<void> _cargarIcono() async {
-  _iconoPatita = await BitmapDescriptor.fromAssetImage(
+  _iconoPatita = await BitmapDescriptor.asset(
     const ImageConfiguration(size: Size(48, 48)),
     'assets/images/64.png',
   );
@@ -54,7 +54,7 @@ Future<void> _cargarIcono() async {
                   double.parse(d['latitud']),
                   double.parse(d['longitud']),
                 ),
-                icon: _iconoPatita ?? BitmapDescriptor.defaultMarker, 
+                
                 infoWindow: InfoWindow(title: d['imei'] ?? 'Dispositivo'),
               );
             }).toSet();

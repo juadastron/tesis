@@ -145,7 +145,7 @@ void mostrarFormularioNuevoUsuario(BuildContext context, VoidCallback onCrear) {
                   ),
                 ),
                 DropdownButtonFormField<String>(
-                  value: null, // o `rolController.text` si es edición
+                  value: null, 
                   decoration: InputDecoration(
                     labelText: "Rol",
                     labelStyle: GoogleFonts.montserrat(),

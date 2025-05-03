@@ -6,9 +6,6 @@ import '../services/dispositivo_service.dart';
 class DispositivosPage extends StatefulWidget {
   const DispositivosPage({super.key});
 
-
-
-
   @override
   State<DispositivosPage> createState() => _DispositivosPageState();
 }
