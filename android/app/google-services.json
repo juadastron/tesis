@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "870343598107",
+    "project_id": "geo-little-paws",
+    "storage_bucket": "geo-little-paws.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:870343598107:android:0fa51f50bb31e9a39a18be",
+        "android_client_info": {
+          "package_name": "com.geolittlepaws.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCu4OpXP1TjwcGmdoeAwA5vXG0Eu3HCzJU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
