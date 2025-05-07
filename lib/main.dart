@@ -11,6 +11,7 @@ import 'pages/animales_page.dart';
 import 'pages/dispositivos_page.dart';
 import 'pages/mapa_page.dart';
 import 'services/notificaciones_service.dart';
+import 'pages/splash_screen.dart'; 
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -36,6 +37,7 @@ void main() async {
   );
 }
 
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -49,7 +51,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.deepPurple,
         fontFamily: 'Montserrat',
       ),
-      home: const LoginScreen(),
+      home: const SplashScreen(),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/home': (context) => const HomePage(),

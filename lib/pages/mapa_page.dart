@@ -5,6 +5,7 @@ import 'dart:convert';
 import '../services/ubicacion_service.dart'; // 🔥
 import 'package:flutter/foundation.dart'; // 👈 para Factory
 import 'package:flutter/gestures.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 BitmapDescriptor? _iconoPatita;
 
@@ -30,15 +31,15 @@ class _MapaPageState extends State<MapaPage> {
   void initState() {
     super.initState();
     _cargarIcono();
-  _cargarDispositivos();
+    _cargarDispositivos();
   }
 
-Future<void> _cargarIcono() async {
-  _iconoPatita = await BitmapDescriptor.asset(
-    const ImageConfiguration(size: Size(48, 48)),
-    'assets/images/64.png',
-  );
-}
+  Future<void> _cargarIcono() async {
+    _iconoPatita = await BitmapDescriptor.asset(
+      const ImageConfiguration(size: Size(48, 48)),
+      'assets/images/64.png',
+    );
+  }
 
   Future<void> _cargarDispositivos() async {
     try {
@@ -54,7 +55,7 @@ Future<void> _cargarIcono() async {
                   double.parse(d['latitud']),
                   double.parse(d['longitud']),
                 ),
-                
+
                 infoWindow: InfoWindow(title: d['imei'] ?? 'Dispositivo'),
               );
             }).toSet();
@@ -79,8 +80,12 @@ Future<void> _cargarIcono() async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mapa de dispositivos'),
-        backgroundColor: const Color(0xFF6A1B9A),
+        title: Text(
+          'Ubicación de los animales',
+          style: GoogleFonts.montserrat(),
+        ),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        foregroundColor: const Color(0xFF6A1B9A),
       ),
       body: Stack(
         children: [
@@ -101,29 +106,46 @@ Future<void> _cargarIcono() async {
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Material(
-                elevation: 6,
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButtonFormField<String>(
-                      value: _dispositivoSeleccionado,
-                      hint: const Text('Seleccionar dispositivo'),
-                      items:
-                          _dispositivos.map((d) {
-                            return DropdownMenuItem<String>(
-                              value: d['id_dispositivo'].toString(),
-                              child: Text(d['imei'] ?? 'Dispositivo'),
-                            );
-                          }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _dispositivoSeleccionado = value;
-                        });
-                        if (value != null) _centrarEnDispositivo(value);
-                      },
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Color(0xFF6A1B9A), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 6,
+                      offset: Offset(0, 2),
                     ),
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _dispositivoSeleccionado,
+                    isExpanded: true,
+                    hint: Text(
+                      'Seleccionar dispositivo',
+                      style: GoogleFonts.montserrat(color: Colors.grey[700]),
+                    ),
+                    icon: const Icon(
+                      Icons.arrow_drop_down,
+                      color: Color(0xFF6A1B9A),
+                    ),
+                    style: GoogleFonts.montserrat(color: Colors.black),
+                    items:
+                        _dispositivos.map((d) {
+                          return DropdownMenuItem<String>(
+                            value: d['id_dispositivo'].toString(),
+                            child: Text(d['imei'] ?? 'Dispositivo'),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _dispositivoSeleccionado = value;
+                      });
+                      if (value != null) _centrarEnDispositivo(value);
+                    },
                   ),
                 ),
               ),

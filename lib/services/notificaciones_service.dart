@@ -15,6 +15,14 @@ class NotificacionesService {
     final fcmToken = await _messaging.getToken();
     print('🔑 Token FCM: $fcmToken');
 
+    // ✅ Suscribirse al topic "todos"
+    try {
+      await _messaging.subscribeToTopic("todos");
+      print('📌 Suscrito al topic "todos"');
+    } catch (e) {
+      print('⚠️ Error al suscribirse al topic: $e');
+    }
+
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
       print('📲 Notificación en primer plano: ${message.notification?.title}');
 
