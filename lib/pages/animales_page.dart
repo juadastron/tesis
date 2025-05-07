@@ -31,7 +31,7 @@ class _AnimalesPageState extends State<AnimalesPage> {
           } else if (snapshot.hasError) {
             return Center(
               child: Text(
-                'Error: ${snapshot.error}',
+                'Error: \${snapshot.error}',
                 style: GoogleFonts.montserrat(),
               ),
             );
@@ -49,7 +49,7 @@ class _AnimalesPageState extends State<AnimalesPage> {
           return ListView.builder(
             itemCount: animales.length,
             itemBuilder: (context, index) {
-              final animal = animales[index]; // 🔥 Aquí corregimos
+              final animal = animales[index];
 
               return FutureBuilder<Map<String, dynamic>?>(
                 future: obtenerAsignacionAnimal(animal.id!),
@@ -70,14 +70,77 @@ class _AnimalesPageState extends State<AnimalesPage> {
                           '${animal.especie} | Edad: ${animal.edad ?? "N/D"} | Color: ${animal.color ?? "N/D"}',
                           style: GoogleFonts.montserrat(),
                         ),
-                        if (asignacion != null)
+                        if (asignacion != null) ...[
+                          const SizedBox(height: 4),
                           Text(
-                            'Collar: IMEI ${asignacion["imei"]} | Desde: ${asignacion["fecha_inicio"].toString().split(" ")[0]}',
+                            'Collar:',
                             style: GoogleFonts.montserrat(
-                              fontSize: 12,
-                              color: Colors.black54,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              color: Colors.black87,
                             ),
                           ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            margin: const EdgeInsets.only(top: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF2F2F2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.perm_device_info,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'IMEI: ${asignacion["imei"]}',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            margin: const EdgeInsets.only(top: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF2F2F2),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.grey.shade300),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.date_range,
+                                  size: 16,
+                                  color: Colors.grey,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Desde: ${asignacion["fecha_inicio"].toString().split(" ")[0]}',
+                                  style: GoogleFonts.montserrat(
+                                    fontSize: 12,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     trailing: Wrap(
@@ -244,285 +307,423 @@ class _AnimalesPageState extends State<AnimalesPage> {
       ),
     );
   }
-}
 
-// FORMULARIOS
-void mostrarAsignarDispositivo(BuildContext context, int idAnimal) {
-  Dispositivo? dispositivoSeleccionado;
+  // FORMULARIOS
+  void mostrarAsignarDispositivo(BuildContext context, int idAnimal) {
+    Dispositivo? dispositivoSeleccionado;
 
-  showDialog(
-    context: context,
-    builder: (ctx) {
-      return FutureBuilder<List<Dispositivo>>(
-        future: obtenerDispositivos(), // debe retornar solo los disponibles
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const AlertDialog(
-              content: Center(child: CircularProgressIndicator()),
-            );
-          } else if (snapshot.hasError) {
-            return AlertDialog(
-              title: Text('Error', style: GoogleFonts.montserrat()),
-              content: Text(
-                'No se pudieron cargar los dispositivos.',
-                style: GoogleFonts.montserrat(),
-              ),
-            );
-          }
-          final disponibles =
-              (snapshot.data ?? [])
-                  .where((d) => d.estadoActual == 'disponible')
-                  .toList();
-
-          return StatefulBuilder(
-            builder: (context, setState) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return FutureBuilder<List<Dispositivo>>(
+          future: obtenerDispositivos(), // debe retornar solo los disponibles
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const AlertDialog(
+                content: Center(child: CircularProgressIndicator()),
+              );
+            } else if (snapshot.hasError) {
               return AlertDialog(
-                title: Text(
-                  'Asignar dispositivo',
+                title: Text('Error', style: GoogleFonts.montserrat()),
+                content: Text(
+                  'No se pudieron cargar los dispositivos.',
                   style: GoogleFonts.montserrat(),
                 ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField<Dispositivo>(
-                      decoration: InputDecoration(
-                        labelText: 'Selecciona un dispositivo',
-                        labelStyle: GoogleFonts.montserrat(),
+              );
+            }
+            final disponibles =
+                (snapshot.data ?? [])
+                    .where((d) => d.estadoActual == 'disponible')
+                    .toList();
+
+            return StatefulBuilder(
+              builder: (context, setState) {
+                return AlertDialog(
+                  title: Text(
+                    'Asignar dispositivo',
+                    style: GoogleFonts.montserrat(),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      DropdownButtonFormField<Dispositivo>(
+                        decoration: InputDecoration(
+                          labelText: 'Selecciona un dispositivo',
+                          labelStyle: GoogleFonts.montserrat(),
+                        ),
+                        value: dispositivoSeleccionado,
+                        items:
+                            disponibles.map((dispositivo) {
+                              return DropdownMenuItem(
+                                value: dispositivo,
+                                child: Text(
+                                  'IMEI: ${dispositivo.imei}',
+                                  style: GoogleFonts.montserrat(),
+                                ),
+                              );
+                            }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            dispositivoSeleccionado = value;
+                          });
+                        },
                       ),
-                      value: dispositivoSeleccionado,
-                      items:
-                          disponibles.map((dispositivo) {
-                            return DropdownMenuItem(
-                              value: dispositivo,
-                              child: Text(
-                                'IMEI: ${dispositivo.imei}',
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('Cancelar', style: GoogleFonts.montserrat()),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (dispositivoSeleccionado == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'Debes seleccionar un dispositivo',
                                 style: GoogleFonts.montserrat(),
                               ),
-                            );
-                          }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          dispositivoSeleccionado = value;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('Cancelar', style: GoogleFonts.montserrat()),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (dispositivoSeleccionado == null) {
+                            ),
+                          );
+                          return;
+                        }
+
+                        final exito = await asignarDispositivoAnimal(
+                          idAnimal,
+                          dispositivoSeleccionado!.id!,
+                        );
+                        Navigator.pop(context);
+
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              'Debes seleccionar un dispositivo',
+                              exito
+                                  ? 'Dispositivo asignado correctamente'
+                                  : 'Error al asignar dispositivo',
                               style: GoogleFonts.montserrat(),
                             ),
                           ),
                         );
-                        return;
-                      }
+                      },
+                      child: Text('Asignar', style: GoogleFonts.montserrat()),
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
 
-                      final exito = await asignarDispositivoAnimal(
-                        idAnimal,
-                        dispositivoSeleccionado!.id!,
-                      );
-                      Navigator.pop(context);
+  void mostrarCrearAnimal(BuildContext context, VoidCallback onCrear) {
+    final nombreController = TextEditingController();
+    final especieController = TextEditingController();
+    final edadController = TextEditingController();
+    final colorController = TextEditingController();
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            exito
-                                ? 'Dispositivo asignado correctamente'
-                                : 'Error al asignar dispositivo',
-                            style: GoogleFonts.montserrat(),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (ctx) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
+            ),
+            backgroundColor: const Color(0xFFF8F5F9),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Nuevo Animal',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nombreController,
+                    decoration: InputDecoration(
+                      labelText: "Nombre",
+                      labelStyle: GoogleFonts.montserrat(),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6A1B9A)),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF6A1B9A),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  TextField(
+                    controller: especieController,
+                    decoration: InputDecoration(
+                      labelText: "Especie",
+                      labelStyle: GoogleFonts.montserrat(),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6A1B9A)),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF6A1B9A),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  TextField(
+                    controller: edadController,
+                    decoration: InputDecoration(
+                      labelText: "Edad",
+                      labelStyle: GoogleFonts.montserrat(),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6A1B9A)),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF6A1B9A),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  TextField(
+                    controller: colorController,
+                    decoration: InputDecoration(
+                      labelText: "Color",
+                      labelStyle: GoogleFonts.montserrat(),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6A1B9A)),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF6A1B9A),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(
+                          'Cancelar',
+                          style: GoogleFonts.montserrat(
+                            color: Color(0xFF6A1B9A),
                           ),
                         ),
-                      );
-                    },
-                    child: Text('Asignar', style: GoogleFonts.montserrat()),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6A1B9A),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        onPressed: () async {
+                          final creado = await crearAnimal(
+                            Animal(
+                              nombre: nombreController.text,
+                              especie: especieController.text,
+                              edad: int.tryParse(edadController.text),
+                              color: colorController.text,
+                            ),
+                          );
+
+                          if (creado) {
+                            Navigator.pop(ctx);
+                            onCrear();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "Error al crear",
+                                  style: GoogleFonts.montserrat(),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(
+                          "Guardar",
+                          style: GoogleFonts.montserrat(color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              );
-            },
-          );
-        },
-      );
-    },
-  );
-}
-
-void mostrarCrearAnimal(BuildContext context, VoidCallback onCrear) {
-  final nombreController = TextEditingController();
-  final especieController = TextEditingController();
-  final edadController = TextEditingController();
-  final colorController = TextEditingController();
-
-  showDialog(
-    context: context,
-    builder:
-        (ctx) => AlertDialog(
-          title: Text('Nuevo Animal', style: GoogleFonts.montserrat()),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nombreController,
-                decoration: InputDecoration(
-                  labelText: "Nombre",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
               ),
-              TextField(
-                controller: especieController,
-                decoration: InputDecoration(
-                  labelText: "Especie",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-              ),
-              TextField(
-                controller: edadController,
-                decoration: InputDecoration(
-                  labelText: "Edad",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: colorController,
-                decoration: InputDecoration(
-                  labelText: "Color",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancelar', style: GoogleFonts.montserrat()),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                final creado = await crearAnimal(
-                  Animal(
-                    nombre: nombreController.text,
-                    especie: especieController.text,
-                    edad: int.tryParse(edadController.text),
-                    color: colorController.text,
-                  ),
-                );
+          ),
+    );
+  }
 
-                if (creado) {
-                  Navigator.pop(ctx);
-                  onCrear();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        "Error al crear",
-                        style: GoogleFonts.montserrat(),
+  void mostrarEditarAnimal(
+    BuildContext context,
+    Animal animal,
+    VoidCallback onUpdate,
+  ) {
+    final nombreController = TextEditingController(text: animal.nombre);
+    final especieController = TextEditingController(text: animal.especie);
+    final edadController = TextEditingController(
+      text: animal.edad?.toString() ?? '',
+    );
+    final colorController = TextEditingController(text: animal.color ?? '');
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (ctx) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
+            ),
+            backgroundColor: const Color(0xFFF8F5F9),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Editar Animal',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: nombreController,
+                    decoration: InputDecoration(
+                      labelText: "Nombre",
+                      labelStyle: GoogleFonts.montserrat(),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6A1B9A)),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF6A1B9A),
+                          width: 2,
+                        ),
                       ),
                     ),
-                  );
-                }
-              },
-              child: Text("Guardar", style: GoogleFonts.montserrat()),
-            ),
-          ],
-        ),
-  );
-}
-
-void mostrarEditarAnimal(
-  BuildContext context,
-  Animal animal,
-  VoidCallback onUpdate,
-) {
-  final nombreController = TextEditingController(text: animal.nombre);
-  final especieController = TextEditingController(text: animal.especie);
-  final edadController = TextEditingController(
-    text: animal.edad?.toString() ?? '',
-  );
-  final colorController = TextEditingController(text: animal.color ?? '');
-
-  showDialog(
-    context: context,
-    builder:
-        (ctx) => AlertDialog(
-          title: Text('Editar Animal', style: GoogleFonts.montserrat()),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nombreController,
-                decoration: InputDecoration(
-                  labelText: "Nombre",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-              ),
-              TextField(
-                controller: especieController,
-                decoration: InputDecoration(
-                  labelText: "Especie",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-              ),
-              TextField(
-                controller: edadController,
-                decoration: InputDecoration(
-                  labelText: "Edad",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              TextField(
-                controller: colorController,
-                decoration: InputDecoration(
-                  labelText: "Color",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text('Cancelar', style: GoogleFonts.montserrat()),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final actualizado = await actualizarAnimal(
-                  Animal(
-                    id: animal.id,
-                    nombre: nombreController.text,
-                    especie: especieController.text,
-                    edad: int.tryParse(edadController.text),
-                    color: colorController.text,
                   ),
-                );
-
-                if (actualizado) {
-                  Navigator.pop(ctx);
-                  onUpdate();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        "Error al actualizar",
-                        style: GoogleFonts.montserrat(),
+                  TextField(
+                    controller: especieController,
+                    decoration: InputDecoration(
+                      labelText: "Especie",
+                      labelStyle: GoogleFonts.montserrat(),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6A1B9A)),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF6A1B9A),
+                          width: 2,
+                        ),
                       ),
                     ),
-                  );
-                }
-              },
-              child: Text("Guardar", style: GoogleFonts.montserrat()),
+                  ),
+                  TextField(
+                    controller: edadController,
+                    decoration: InputDecoration(
+                      labelText: "Edad",
+                      labelStyle: GoogleFonts.montserrat(),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6A1B9A)),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF6A1B9A),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  TextField(
+                    controller: colorController,
+                    decoration: InputDecoration(
+                      labelText: "Color",
+                      labelStyle: GoogleFonts.montserrat(),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6A1B9A)),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF6A1B9A),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text(
+                          'Cancelar',
+                          style: GoogleFonts.montserrat(
+                            color: Color(0xFF6A1B9A),
+                          ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6A1B9A),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        onPressed: () async {
+                          final actualizado = await actualizarAnimal(
+                            Animal(
+                              id: animal.id,
+                              nombre: nombreController.text,
+                              especie: especieController.text,
+                              edad: int.tryParse(edadController.text),
+                              color: colorController.text,
+                            ),
+                          );
+
+                          if (actualizado) {
+                            Navigator.pop(ctx);
+                            onUpdate();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "Error al actualizar",
+                                  style: GoogleFonts.montserrat(),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: Text(
+                          "Guardar",
+                          style: GoogleFonts.montserrat(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-  );
+          ),
+    );
+  }
 }

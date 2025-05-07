@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/pages/splash_screen.dart';
+import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -18,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = Provider.of<UserProvider>(context);
     return Scaffold(
       body: Stack(
         children: [
@@ -106,14 +111,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         filled: true,
                         fillColor: Colors.white,
                         hintText: 'Correo electrónico',
-                        hintStyle: TextStyle(color: const Color.fromARGB(255, 128, 128, 128)), // Gris oscuro para mayor contraste
+                        hintStyle: TextStyle(
+                          color: const Color.fromARGB(255, 128, 128, 128),
+                        ), // Gris oscuro para mayor contraste
                         prefixIcon: const SizedBox(
                           height: 48,
                           width: 48,
                           child: Center(
                             child: FaIcon(
                               FontAwesomeIcons.dog,
-                              color: Color.fromARGB(255, 70, 117, 192), // Azul claro
+                              color: Color.fromARGB(
+                                255,
+                                70,
+                                117,
+                                192,
+                              ), // Azul claro
                             ),
                           ),
                         ),
@@ -147,14 +159,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         filled: true,
                         fillColor: Colors.white,
                         hintText: 'Contraseña',
-                        hintStyle: TextStyle(color: const Color.fromARGB(255, 128, 128, 128)), // Gris oscuro para mayor contraste
+                        hintStyle: TextStyle(
+                          color: const Color.fromARGB(255, 128, 128, 128),
+                        ), // Gris oscuro para mayor contraste
                         prefixIcon: const SizedBox(
                           height: 48,
                           width: 48,
                           child: Center(
                             child: FaIcon(
                               FontAwesomeIcons.lock,
-                              color: Color.fromARGB(255, 70, 117, 192), // Azul claro
+                              color: Color.fromARGB(
+                                255,
+                                70,
+                                117,
+                                192,
+                              ), // Azul claro
                             ),
                           ),
                         ),
@@ -201,7 +220,28 @@ class _LoginScreenState extends State<LoginScreen> {
                               password,
                             );
                             if (success) {
-                              Navigator.pushReplacementNamed(context, '/home');
+                              final String nombre = user.nombre.toString();
+                              final String email = user.email.toString();
+                              final String rol = user.rol.toString();
+
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await prefs.setString('nombre', nombre);
+                              await prefs.setString('email', email);
+                              await prefs.setString('rol', rol);
+
+                              user.setUser(
+                                nombre: nombre,
+                                email: email,
+                                rol: rol,
+                              );
+
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SplashScreen(),
+                                ),
+                              );
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -215,7 +255,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Color(0xFF6A1B9A), // Púrpura
-                          shadowColor: Colors.black.withOpacity(0.2), // Sombra suave
+                          shadowColor: Colors.black.withOpacity(
+                            0.2,
+                          ), // Sombra suave
                           elevation: 4, // Elevación para sombra
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(

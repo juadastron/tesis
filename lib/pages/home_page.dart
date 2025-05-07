@@ -38,13 +38,13 @@ class HomePage extends StatelessWidget {
       if (userRole == 'admin')
         {
           'icon': FontAwesomeIcons.microchip,
-          'text': 'Dispositivos',
+          'text': 'Collares',
           'route': '/dispositivos',
           'color': Colors.blue, // Azul
         },
         {
         'icon': FontAwesomeIcons.info,
-        'text': 'Quieres somos?',
+        'text': 'Quienes somos?',
         'route': '/mapa',
         'color': const Color(0xFF6A1B9A), // Morado
       },
@@ -67,6 +67,7 @@ class HomePage extends StatelessWidget {
           ),
         ),
         backgroundColor: const Color(0xFF6A1B9A),
+        foregroundColor: Colors.white,
       ),
 
       drawer: Drawer(
