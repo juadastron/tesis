@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../services/ubicacion_service.dart'; // 🔥
 import 'package:flutter/foundation.dart'; // 👈 para Factory
 import 'package:flutter/gestures.dart';

@@ -34,16 +34,20 @@ class _SplashScreenState extends State<SplashScreen>
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    final idUsuario = prefs.getInt('idUsuario');
     final nombre = prefs.getString('nombre');
     final email = prefs.getString('email');
     final rol = prefs.getString('rol');
 
-    final userProvider = Provider.of<UserProvider>(context, listen: false);
-
     Widget nextPage;
 
-    if (nombre != null && email != null && rol != null) {
-      userProvider.setUser(nombre: nombre, email: email, rol: rol);
+    if (idUsuario != null && nombre != null && email != null && rol != null) {
+      Provider.of<UserProvider>(context, listen: false).setUser(
+        idUsuario: idUsuario,
+        nombre: nombre,
+        email: email,
+        rol: rol,
+      );
       nextPage = const HomePage();
     } else {
       nextPage = const LoginScreen();

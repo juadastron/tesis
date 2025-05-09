@@ -220,17 +220,23 @@ class _LoginScreenState extends State<LoginScreen> {
                               password,
                             );
                             if (success) {
+                              final int idUsuario = user.idUsuario!;
                               final String nombre = user.nombre.toString();
                               final String email = user.email.toString();
                               final String rol = user.rol.toString();
 
                               final prefs =
                                   await SharedPreferences.getInstance();
+                              await prefs.setInt(
+                                'idUsuario',
+                                idUsuario,
+                              );
                               await prefs.setString('nombre', nombre);
                               await prefs.setString('email', email);
                               await prefs.setString('rol', rol);
 
                               user.setUser(
+                                idUsuario: idUsuario,
                                 nombre: nombre,
                                 email: email,
                                 rol: rol,
