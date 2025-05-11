@@ -5,7 +5,6 @@ import '../models/animal_model.dart';
 import '../services/animal_service.dart';
 import '../services/dispositivo_service.dart';
 import '../models/dispositivo_model.dart';
-import '../services/asignacion_service.dart';
 
 class AnimalesPage extends StatefulWidget {
   const AnimalesPage({super.key});

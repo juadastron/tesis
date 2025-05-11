@@ -1,4 +1,3 @@
-import '../core/config.dart';
 import 'package:flutter/material.dart';
 import '../services/usuarios_service.dart';
 import '../models/usuario_model.dart';

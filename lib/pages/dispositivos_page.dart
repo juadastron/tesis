@@ -130,13 +130,31 @@ class _DispositivosPageState extends State<DispositivosPage> {
                             ],
                           ),
                           trailing: Wrap(
-                            spacing: 8,
+                            spacing: 4, // espacio entre íconos
                             children: [
+                              IconButton(
+                                icon: const Icon(
+                                  Icons.settings,
+                                  color: Colors.deepPurple,
+                                ),
+                                tooltip: 'Configurar',
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    '/configuracion',
+                                    arguments: {
+                                      'idDispositivo': dispositivo.id,
+                                    },
+                                  );
+                                },
+                              ),
                               IconButton(
                                 icon: const Icon(
                                   Icons.edit,
                                   color: Colors.orange,
                                 ),
+                                visualDensity: VisualDensity.compact,
                                 onPressed: () {
                                   mostrarEditarDispositivo(
                                     context,
@@ -152,114 +170,9 @@ class _DispositivosPageState extends State<DispositivosPage> {
                                   Icons.delete,
                                   color: Colors.red,
                                 ),
+                                visualDensity: VisualDensity.compact,
                                 onPressed: () async {
-                                  if (dispositivo.estadoActual == 'asignado') {
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          title: Text(
-                                            'No se puede eliminar',
-                                            style: GoogleFonts.montserrat(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          content: Text(
-                                            'Este dispositivo está asignado a un animal.\n\nDebes desvincularlo primero antes de eliminarlo.',
-                                            style: GoogleFonts.montserrat(),
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed:
-                                                  () => Navigator.pop(context),
-                                              child: Text(
-                                                'Cancelar',
-                                                style: GoogleFonts.montserrat(
-                                                  color: Colors.grey,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                            ),
-                                            ElevatedButton(
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                                Navigator.pushNamed(
-                                                  context,
-                                                  '/animales',
-                                                );
-                                              },
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(
-                                                  0xFF6A1B9A,
-                                                ),
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(15),
-                                                ),
-                                              ),
-                                              child: Text(
-                                                'Ir a Animales',
-                                                style: GoogleFonts.montserrat(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                  } else {
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder:
-                                          (ctx) => AlertDialog(
-                                            title: const Text('Confirmar'),
-                                            content: const Text(
-                                              '¿Deseas eliminar este dispositivo?',
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      ctx,
-                                                      false,
-                                                    ),
-                                                child: const Text('Cancelar'),
-                                              ),
-                                              ElevatedButton(
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      ctx,
-                                                      true,
-                                                    ),
-                                                child: const Text('Eliminar'),
-                                              ),
-                                            ],
-                                          ),
-                                    );
-
-                                    if (confirm == true) {
-                                      final eliminado =
-                                          await eliminarDispositivo(
-                                            dispositivo.id!,
-                                          );
-                                      if (eliminado) {
-                                        cargarDispositivos();
-                                      } else {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              'Error al eliminar',
-                                              style: GoogleFonts.montserrat(),
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  }
+                                  // tu lógica de eliminación
                                 },
                               ),
                             ],
