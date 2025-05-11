@@ -28,8 +28,8 @@ class _MapaPageState extends State<MapaPage> {
   @override
   void initState() {
     super.initState();
-    _cargarIcono();
     _cargarDispositivos();
+    _cargarIcono();
   }
 
   Future<void> _cargarIcono() async {
