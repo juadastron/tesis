@@ -65,9 +65,50 @@ class _AnimalesPageState extends State<AnimalesPage> {
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '${animal.especie} | Edad: ${animal.edad ?? "N/D"} | Color: ${animal.color ?? "N/D"}',
-                          style: GoogleFonts.montserrat(),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.pets,
+                              size: 16,
+                              color: Colors.deepPurple,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Especie: ${animal.especie}',
+                              style: GoogleFonts.montserrat(fontSize: 13),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.cake,
+                              size: 16,
+                              color: Colors.deepPurple,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Edad: ${animal.edad ?? "N/D"}',
+                              style: GoogleFonts.montserrat(fontSize: 13),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.palette,
+                              size: 16,
+                              color: Colors.deepPurple,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Color: ${animal.color ?? "N/D"}',
+                              style: GoogleFonts.montserrat(fontSize: 13),
+                            ),
+                          ],
                         ),
                         if (asignacion != null) ...[
                           const SizedBox(height: 4),
@@ -183,11 +224,16 @@ class _AnimalesPageState extends State<AnimalesPage> {
                                           ),
                                         ),
                                         ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(
+                                              0xFF6A1B9A,
+                                            ),
+                                          ),
                                           onPressed:
                                               () => Navigator.pop(ctx, true),
                                           child: Text(
                                             'Desvincular',
-                                            style: GoogleFonts.montserrat(),
+                                            style: GoogleFonts.montserrat(color:Colors.white),
                                           ),
                                         ),
                                       ],
@@ -255,12 +301,23 @@ class _AnimalesPageState extends State<AnimalesPage> {
                                           style: GoogleFonts.montserrat(),
                                         ),
                                       ),
+
                                       ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color.fromRGBO(
+                                            244,
+                                            67,
+                                            54,
+                                            1,
+                                          ),
+                                        ),
                                         onPressed:
                                             () => Navigator.pop(ctx, true),
                                         child: Text(
                                           'Eliminar',
-                                          style: GoogleFonts.montserrat(),
+                                          style: GoogleFonts.montserrat(
+                                            color: Colors.white,
+                                          ),
                                         ),
                                       ),
                                     ],
@@ -375,6 +432,9 @@ class _AnimalesPageState extends State<AnimalesPage> {
                       child: Text('Cancelar', style: GoogleFonts.montserrat()),
                     ),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6A1B9A),
+                      ),
                       onPressed: () async {
                         if (dispositivoSeleccionado == null) {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -405,7 +465,10 @@ class _AnimalesPageState extends State<AnimalesPage> {
                           ),
                         );
                       },
-                      child: Text('Asignar', style: GoogleFonts.montserrat()),
+                      child: Text(
+                        'Asignar',
+                        style: GoogleFonts.montserrat(color: Colors.white),
+                      ),
                     ),
                   ],
                 );

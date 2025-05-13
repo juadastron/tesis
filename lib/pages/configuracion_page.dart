@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/MapaZonaPage.dart';
 import 'package:google_fonts/google_fonts.dart';
-
+import '../services/configuracion_mqtt_service.dart';
 import '../models/configuracion_dispositivo.dart';
 import '../models/zona_segura_model.dart';
 import '../services/configuracion_service.dart';
@@ -18,6 +18,13 @@ class ConfiguracionPage extends StatefulWidget {
 
 class _ConfiguracionPageState extends State<ConfiguracionPage> {
   final _formKey = GlobalKey<FormState>();
+  final mqttService = ConfiguracionMqttService();
+  bool activarSiesta = false;
+  TimeOfDay horaInicioSiesta = const TimeOfDay(hour: 13, minute: 0);
+  TimeOfDay horaFinSiesta = const TimeOfDay(hour: 14, minute: 0);
+  int umbralInactividad = 30;
+  bool modoAhorro = false;
+  int frecuenciaGps = 10;
   ZonaSegura? zonaActual;
   bool activarHorario = false;
   TimeOfDay horaInicio = const TimeOfDay(hour: 22, minute: 0);
@@ -53,11 +60,20 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
     final config = await configService.obtenerConfiguracion(
       widget.idDispositivo,
     );
+
     if (config != null) {
       setState(() {
         activarHorario = config.activarHorario;
         horaInicio = _stringToTime(config.horaInicio);
         horaFin = _stringToTime(config.horaFin);
+
+        // NUEVOS CAMPOS
+        activarSiesta = config.activarSiesta;
+        horaInicioSiesta = _stringToTime(config.horaInicioSiesta);
+        horaFinSiesta = _stringToTime(config.horaFinSiesta);
+        umbralInactividad = config.umbralInactividadMin;
+        modoAhorro = config.modoAhorro;
+        frecuenciaGps = config.frecuenciaGpsMinutos;
       });
     }
   }
@@ -75,6 +91,14 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
           "${horaInicio.hour.toString().padLeft(2, '0')}:${horaInicio.minute.toString().padLeft(2, '0')}:00",
       horaFin:
           "${horaFin.hour.toString().padLeft(2, '0')}:${horaFin.minute.toString().padLeft(2, '0')}:00",
+      activarSiesta: activarSiesta,
+      horaInicioSiesta:
+          "${horaInicioSiesta.hour.toString().padLeft(2, '0')}:${horaInicioSiesta.minute.toString().padLeft(2, '0')}:00",
+      horaFinSiesta:
+          "${horaFinSiesta.hour.toString().padLeft(2, '0')}:${horaFinSiesta.minute.toString().padLeft(2, '0')}:00",
+      umbralInactividadMin: umbralInactividad,
+      modoAhorro: modoAhorro,
+      frecuenciaGpsMinutos: frecuenciaGps,
     );
 
     final ok = await configService.guardarConfiguracion(nuevaConfig);
@@ -82,6 +106,9 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("✅ Configuración guardada")));
+
+      // ✅ Llamar al service que publica al A9G por MQTT
+      await mqttService.enviarConfiguracion(nuevaConfig);
     }
   }
 
@@ -151,6 +178,22 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
     if (hora != null) setState(() => horaFin = hora);
   }
 
+  Future<void> seleccionarHoraInicioSiesta() async {
+    final hora = await showTimePicker(
+      context: context,
+      initialTime: horaInicioSiesta,
+    );
+    if (hora != null) setState(() => horaInicioSiesta = hora);
+  }
+
+  Future<void> seleccionarHoraFinSiesta() async {
+    final hora = await showTimePicker(
+      context: context,
+      initialTime: horaFinSiesta,
+    );
+    if (hora != null) setState(() => horaFinSiesta = hora);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -189,6 +232,85 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                         ),
                       ],
                     ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      "🛌 Modo siesta",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SwitchListTile(
+                      title: const Text("Activar siesta"),
+                      value: activarSiesta,
+                      onChanged: (val) => setState(() => activarSiesta = val),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        ElevatedButton(
+                          onPressed: seleccionarHoraInicioSiesta,
+                          child: Text(
+                            "Inicio: ${horaInicioSiesta.format(context)}",
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: seleccionarHoraFinSiesta,
+                          child: Text("Fin: ${horaFinSiesta.format(context)}"),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 24),
+
+                    const Text(
+                      "📍 Frecuencia GPS (min)",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Slider(
+                      value: frecuenciaGps.toDouble(),
+                      min: 1,
+                      max: 60,
+                      divisions: 59,
+                      label: "$frecuenciaGps min",
+                      onChanged:
+                          (val) => setState(() => frecuenciaGps = val.toInt()),
+                    ),
+
+                    const Divider(height: 24),
+
+                    const Text(
+                      "🧍 Umbral inactividad (min)",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Slider(
+                      value: umbralInactividad.toDouble(),
+                      min: 5,
+                      max: 120,
+                      divisions: 23,
+                      label: "$umbralInactividad min",
+                      onChanged:
+                          (val) =>
+                              setState(() => umbralInactividad = val.toInt()),
+                    ),
+
+                    const Divider(height: 24),
+
+                    const Text(
+                      "🔋 Ahorro de energía",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    SwitchListTile(
+                      title: const Text("Activar modo ahorro"),
+                      value: modoAhorro,
+                      onChanged: (val) => setState(() => modoAhorro = val),
+                    ),
                     const SizedBox(height: 16),
                     Center(
                       child: ElevatedButton(
@@ -211,7 +333,7 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -225,7 +347,6 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                         style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                       if (zonaActual != null)
-                      
                         Padding(
                           padding: const EdgeInsets.only(
                             top: 8.0,
@@ -242,14 +363,13 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                               ),
                               subtitle: Text(
                                 "Latitud: ${zonaActual!.latitud}\nLongitud: ${zonaActual!.longitud}\nRadio: ${zonaActual!.radioMetros} m",
-                                
+
                                 style: GoogleFonts.montserrat(),
                               ),
-                              
                             ),
                           ),
                         ),
-                        
+
                       TextFormField(
                         controller: latitudController,
                         keyboardType: TextInputType.number,
@@ -331,7 +451,12 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                                 }
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color.fromARGB(255, 70, 117, 192),
+                                backgroundColor: const Color.fromARGB(
+                                  255,
+                                  70,
+                                  117,
+                                  192,
+                                ),
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                   vertical: 8,
@@ -340,10 +465,14 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                               child: Text(
                                 "Ver en mapa",
                                 style: GoogleFonts.montserrat(
-                                  color: const Color.fromARGB(255, 255, 255, 255),
+                                  color: const Color.fromARGB(
+                                    255,
+                                    255,
+                                    255,
+                                    255,
+                                  ),
                                 ),
                               ),
-                              
                             ),
                           ],
                         ),

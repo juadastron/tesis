@@ -33,9 +33,21 @@ class ConfiguracionService {
         'activar_horario_nocturno': config.activarHorario,
         'hora_inicio_nocturna': config.horaInicio,
         'hora_fin_nocturna': config.horaFin,
+        'activar_siesta': config.activarSiesta,
+        'hora_inicio_siesta': config.horaInicioSiesta,
+        'hora_fin_siesta': config.horaFinSiesta,
+        'umbral_inactividad_min': config.umbralInactividadMin,
+        'modo_ahorro': config.modoAhorro,
+        'frecuencia_gps_minutos': config.frecuenciaGpsMinutos,
       }),
     );
-
-    return json.decode(response.body)['success'] == true;
+    print("🔍 BODY: ${response.body}");
+    if (response.statusCode == 200 && response.body.isNotEmpty) {
+      final decoded = json.decode(response.body);
+      return decoded['success'] == true;
+    } else {
+      print("❌ BODY vacío o error HTTP (${response.statusCode})");
+      return false;
+    }
   }
 }

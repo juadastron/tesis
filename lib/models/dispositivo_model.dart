@@ -6,6 +6,7 @@ class Dispositivo {
   final String? creadoEn;
   final String? nombreAnimal;
   final String? especieAnimal;
+  final String? numeroCelular; // ✅ Agregado
 
   Dispositivo({
     this.id,
@@ -15,6 +16,7 @@ class Dispositivo {
     this.creadoEn,
     this.nombreAnimal,
     this.especieAnimal,
+    this.numeroCelular, // ✅ Agregado
   });
 
   factory Dispositivo.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class Dispositivo {
       creadoEn: json['creado_en'],
       nombreAnimal: json['nombre_animal'],
       especieAnimal: json['especie_animal'],
+      numeroCelular: json['numero_celular'], 
     );
   }
 
@@ -35,6 +38,7 @@ class Dispositivo {
       'estado_actual': estadoActual,
       'ultima_conexion': ultimaConexion,
       'creado_en': creadoEn,
+      'numero_celular': numeroCelular,
     };
 
     if (incluirId && id != null) {

@@ -101,7 +101,7 @@ void editarUsuarioModal(
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              "Error al actualizar",
+                              "Correo ya en uso",
                               style: GoogleFonts.montserrat(),
                             ),
                           ),
@@ -222,7 +222,7 @@ void mostrarFormularioNuevoUsuario(BuildContext context, VoidCallback onCrear) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
-                              "Error al crear",
+                              "Correo ya en uso",
                               style: GoogleFonts.montserrat(),
                             ),
                           ),
@@ -288,9 +288,7 @@ class _UsuariosPageState extends State<UsuariosPage> {
       appBar: AppBar(
         title: Text(
           'Usuarios Registrados',
-          style: GoogleFonts.montserrat(
-            color: const Color(0xFF6A1B9A),
-          ),
+          style: GoogleFonts.montserrat(color: const Color(0xFF6A1B9A)),
         ),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       ),
@@ -350,9 +348,40 @@ class _UsuariosPageState extends State<UsuariosPage> {
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          subtitle: Text(
-                            '${usuario.email} | Rol: ${usuario.rol}',
-                            style: GoogleFonts.montserrat(),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.email,
+                                    size: 16,
+                                    color: Colors.deepPurple,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    usuario.email,
+                                    style: GoogleFonts.montserrat(fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.person_pin,
+                                    size: 16,
+                                    color: Colors.indigo,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Rol: ${usuario.rol}',
+                                    style: GoogleFonts.montserrat(fontSize: 13),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                           trailing: Wrap(
                             spacing: 8,
@@ -389,11 +418,26 @@ class _UsuariosPageState extends State<UsuariosPage> {
                                                       Navigator.pop(ctx, false),
                                               child: const Text('Cancelar'),
                                             ),
+
                                             ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    const Color.fromRGBO(
+                                                      244,
+                                                      67,
+                                                      54,
+                                                      1,
+                                                    ),
+                                              ),
                                               onPressed:
                                                   () =>
                                                       Navigator.pop(ctx, true),
-                                              child: const Text('Eliminar'),
+                                              child: Text(
+                                                'Eliminar',
+                                                style: GoogleFonts.montserrat(
+                                                  color: Colors.white,
+                                                ),
+                                              ),
                                             ),
                                           ],
                                         ),

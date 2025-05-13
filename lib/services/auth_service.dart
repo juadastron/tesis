@@ -16,10 +16,12 @@ Future<bool> loginUsuario(
     url,
     headers: {"Content-Type": "application/json"},
     body: jsonEncode({"email": email.trim(), "password": password.trim()}),
+    
   );
 
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
+
     if (data["success"] == true) {
       Provider.of<UserProvider>(context, listen: false).setUser(
         idUsuario: int.parse(data["id_usuario"].toString()),
@@ -30,6 +32,7 @@ Future<bool> loginUsuario(
       return true;
     }
   }
+    print("RESPUESTA LOGIN => ${response.body}");
 
   return false;
 }
