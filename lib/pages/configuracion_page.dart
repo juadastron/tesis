@@ -18,6 +18,7 @@ class ConfiguracionPage extends StatefulWidget {
 
 class _ConfiguracionPageState extends State<ConfiguracionPage> {
   final _formKey = GlobalKey<FormState>();
+  String? imeiDispositivo;
   final mqttService = ConfiguracionMqttService();
   bool activarSiesta = false;
   TimeOfDay horaInicioSiesta = const TimeOfDay(hour: 13, minute: 0);
@@ -63,6 +64,7 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
 
     if (config != null) {
       setState(() {
+        imeiDispositivo = config.imei;
         activarHorario = config.activarHorario;
         horaInicio = _stringToTime(config.horaInicio);
         horaFin = _stringToTime(config.horaFin);
@@ -84,8 +86,15 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
   }
 
   Future<void> guardarConfiguracion() async {
+    if (imeiDispositivo == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("❌ Error: IMEI no disponible")),
+      );
+      return;
+    }
     final nuevaConfig = ConfiguracionDispositivo(
       idDispositivo: widget.idDispositivo,
+      imei: imeiDispositivo!,
       activarHorario: activarHorario,
       horaInicio:
           "${horaInicio.hour.toString().padLeft(2, '0')}:${horaInicio.minute.toString().padLeft(2, '0')}:00",
@@ -194,6 +203,13 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
     if (hora != null) setState(() => horaFinSiesta = hora);
   }
 
+  Widget infoIcon(String mensaje) {
+    return Tooltip(
+      message: mensaje,
+      child: const Icon(Icons.info_outline, size: 18),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -202,40 +218,6 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "🕒 Configuración de horario",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SwitchListTile(
-                      title: const Text("Activar horario nocturno"),
-                      value: activarHorario,
-                      onChanged: (val) => setState(() => activarHorario = val),
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        ElevatedButton(
-                          onPressed: seleccionarHoraInicio,
-                          child: Text(
-                            "Hora inicio: ${horaInicio.format(context)}",
-                          ),
-                        ),
-                        ElevatedButton(
-                          onPressed: seleccionarHoraFin,
-                          child: Text("Hora fin: ${horaFin.format(context)}"),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
             const SizedBox(height: 20),
             Card(
               child: Padding(
@@ -268,43 +250,102 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                       ],
                     ),
                     const Divider(height: 24),
-
                     const Text(
-                      "📍 Frecuencia GPS (min)",
+                      "🕒 Configuración de horario",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Slider(
-                      value: frecuenciaGps.toDouble(),
-                      min: 1,
-                      max: 60,
-                      divisions: 59,
-                      label: "$frecuenciaGps min",
-                      onChanged:
-                          (val) => setState(() => frecuenciaGps = val.toInt()),
+                    SwitchListTile(
+                      title: const Text("Activar horario nocturno"),
+                      value: activarHorario,
+                      onChanged: (val) => setState(() => activarHorario = val),
                     ),
-
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        ElevatedButton(
+                          onPressed: seleccionarHoraInicio,
+                          child: Text(
+                            "Hora inicio: ${horaInicio.format(context)}",
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: seleccionarHoraFin,
+                          child: Text("Hora fin: ${horaFin.format(context)}"),
+                        ),
+                      ],
+                    ),
                     const Divider(height: 24),
-
-                    const Text(
-                      "🧍 Umbral inactividad (min)",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        const Text(
+                          "📍 Frecuencia de envio de coordenadas (min)",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 6),
+                        infoIcon(
+                          "Intervalo entre cada envío de coordenadas GPS. Reduce batería si el valor es mayor.",
+                        ),
+                      ],
                     ),
                     Slider(
-                      value: umbralInactividad.toDouble(),
-                      min: 5,
+                      value:
+                          modoAhorro
+                              ? frecuenciaGps.clamp(15, 60).toDouble()
+                              : frecuenciaGps.toDouble(),
+                      min: modoAhorro ? 15 : 1,
+                      max: 60,
+                      divisions: modoAhorro ? ((60 - 15) ~/ 15) : 59,
+                      label: "$frecuenciaGps min",
+                      onChanged: (val) {
+                        setState(() {
+                          frecuenciaGps =
+                              modoAhorro ? (val ~/ 15) * 15 : val.toInt();
+                        });
+                      },
+                    ),
+                    const Divider(height: 24),
+                    Row(
+                      children: [
+                        const Text(
+                          "🧍 Tiempo de inactividad del animal (min)",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 6),
+                        infoIcon(
+                          "Tiempo máximo sin detectar movimiento antes de enviar una alerta de inactividad.",
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value:
+                          modoAhorro
+                              ? umbralInactividad.clamp(15, 60).toDouble()
+                              : umbralInactividad.toDouble(),
+                      min: modoAhorro ? 15 : 5,
                       max: 120,
-                      divisions: 23,
+                      divisions: modoAhorro ? ((120 - 15) ~/ 15) : 23,
                       label: "$umbralInactividad min",
                       onChanged:
-                          (val) =>
-                              setState(() => umbralInactividad = val.toInt()),
+                          modoAhorro
+                              ? (val) => setState(
+                                () => umbralInactividad = (val ~/ 15) * 15,
+                              )
+                              : (val) => setState(
+                                () => umbralInactividad = val.toInt(),
+                              ),
                     ),
-
                     const Divider(height: 24),
-
-                    const Text(
-                      "🔋 Ahorro de energía",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        const Text(
+                          "🔋 Ahorro de energía",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: 6),
+                        infoIcon(
+                          "Reduce el uso de GPS y lo hace cada 15 minutos (incluyendo el tiempo de inactividad del animal multiplos de 15), al igual que frecuencia de comunicación para ahorrar batería, si lo activa o desactiva debe esperar 30 segundos para guardar las nuevas configuraciones.",
+                        ),
+                      ],
                     ),
                     SwitchListTile(
                       title: const Text("Activar modo ahorro"),
@@ -324,7 +365,7 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                           ),
                         ),
                         child: Text(
-                          "Guardar horario nocturno",
+                          "Guardar configuraciones",
                           style: GoogleFonts.montserrat(color: Colors.white),
                         ),
                       ),

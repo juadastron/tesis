@@ -5,15 +5,20 @@ import 'package:http/http.dart' as http;
 Future<List<Map<String, dynamic>>> obtenerDispositivosAsignados() async {
   final response = await http.get(Uri.parse('${baseUrl}ubicaciones.php'));
 
-  final data = jsonDecode(response.body);
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    final estadosValidos = ['asignado', 'peligro', 'inactividad'];
 
-  if (data['success'] == true) {
-    final dispositivos = (data['dispositivos'] as List)
-        .where((d) => d['estado_actual'] == 'asignado')
-        .map((d) => d as Map<String, dynamic>)
-        .toList();
-    return dispositivos;
+    if (data['success'] == true) {
+      final dispositivos = (data['dispositivos'] as List)
+          .where((d) => estadosValidos.contains(d['estado_actual']))
+          .map((d) => d as Map<String, dynamic>)
+          .toList();
+      return dispositivos;
+    } else {
+      throw Exception('Respuesta con success=false');
+    }
   } else {
-    throw Exception('Error al cargar dispositivos: ${data['message']}');
+    throw Exception('Error HTTP: ${response.statusCode}');
   }
 }

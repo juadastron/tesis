@@ -9,6 +9,7 @@ class ConfiguracionMqttService {
   Future<void> enviarConfiguracion(ConfiguracionDispositivo config) async {
     final payload = {
       "id_dispositivo": config.idDispositivo,
+      "imei": config.imei,
       "activar_horario_nocturno": config.activarHorario ? 1 : 0,
       "hora_inicio_nocturna": config.horaInicio,
       "hora_fin_nocturna": config.horaFin,

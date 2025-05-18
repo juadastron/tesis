@@ -16,15 +16,20 @@ Future<List<Usuario>> obtenerUsuarios() async {
 
 Future<bool> crearUsuario(Usuario usuario) async {
   final response = await http.post(
-    
     Uri.parse("${baseUrl}usuarios.php"),
     headers: {"Content-Type": "application/json"},
     body: jsonEncode(usuario.toJson()),
   );
-  print('📨 RESPUETA DEL SERVIDOR: ${response.body}');
 
-  final resultado = jsonDecode(response.body);
-  return resultado["success"] == true;
+  print("🟡 RESPUESTA DEL SERVIDOR: '${response.body}'");
+
+  if (response.statusCode == 200 && response.body.trim().isNotEmpty) {
+    final resultado = jsonDecode(response.body);
+    return resultado["success"] == true;
+  } else {
+    print("❌ Error: Respuesta vacía o mal formada");
+    return false;
+  }
 }
 
 Future<bool> actualizarUsuario(Usuario usuario) async {
@@ -34,8 +39,15 @@ Future<bool> actualizarUsuario(Usuario usuario) async {
     body: jsonEncode(usuario.toJson(incluirId: true)),
   );
 
-  final resultado = jsonDecode(response.body);
-  return resultado["success"] == true;
+  print("🟡 RESPUESTA DEL SERVIDOR: '${response.body}'");
+
+  if (response.statusCode == 200 && response.body.trim().isNotEmpty) {
+    final resultado = jsonDecode(response.body);
+    return resultado["success"] == true;
+  } else {
+    print("❌ Error al actualizar usuario. Código: ${response.statusCode}");
+    return false;
+  }
 }
 
 Future<bool> eliminarUsuario(int id) async {

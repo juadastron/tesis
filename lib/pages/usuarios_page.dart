@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../services/usuarios_service.dart';
 import '../models/usuario_model.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import '../utils/notificador.dart';
+import '../utils/validadores.dart';
 
 class UsuariosPage extends StatefulWidget {
   const UsuariosPage({super.key});
@@ -15,113 +19,156 @@ void editarUsuarioModal(
   Usuario usuario,
   VoidCallback onUpdate,
 ) {
+  final formKey = GlobalKey<FormState>();
   final nombreController = TextEditingController(text: usuario.nombre);
   final emailController = TextEditingController(text: usuario.email);
   final rolController = TextEditingController(text: usuario.rol);
 
   showDialog(
     context: context,
-    builder: (context) {
-      return Dialog(
-        backgroundColor: const Color(0xFFF5F0FF),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Editar Usuario',
-                style: GoogleFonts.montserrat(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: nombreController,
-                decoration: InputDecoration(
-                  labelText: "Nombre",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-              ),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-              ),
-              DropdownButtonFormField<String>(
-                value:
-                    rolController.text.isNotEmpty ? rolController.text : null,
-                decoration: InputDecoration(
-                  labelText: "Rol",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-                style: GoogleFonts.montserrat(color: Colors.black),
-                items: const [
-                  DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                  DropdownMenuItem(
-                    value: 'voluntario',
-                    child: Text('Voluntario'),
-                  ),
-                ],
-                onChanged: (value) {
-                  rolController.text = value!;
-                },
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+    builder: (ctx) {
+      return GestureDetector(
+        onTap: () => FocusScope.of(ctx).unfocus(),
+        child: Dialog(
+          backgroundColor: const Color(0xFFF5F0FF),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 32,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text(
-                      'Cancelar',
-                      style: GoogleFonts.montserrat(color: Colors.deepPurple),
+                  Text(
+                    'Editar Usuario',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final actualizado = await actualizarUsuario(
-                        Usuario(
-                          id: usuario.id,
-                          nombre: nombreController.text,
-                          email: emailController.text,
-                          rol: rolController.text,
-                        ),
-                      );
+                  const SizedBox(height: 20),
 
-                      if (actualizado) {
-                        Navigator.pop(context);
-                        onUpdate();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "Correo ya en uso",
-                              style: GoogleFonts.montserrat(),
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6A1B9A),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                  TextFormField(
+                    controller: nombreController,
+                    validator: validarNombre,
+                    decoration: InputDecoration(
+                      labelText: "Nombre",
+                      labelStyle: GoogleFonts.montserrat(),
+                    ),
+                  ),
+                  TextFormField(
+                    controller: emailController,
+                    validator: validarCorreo,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: "Email",
+                      labelStyle: GoogleFonts.montserrat(),
+                    ),
+                  ),
+                  DropdownButtonFormField<String>(
+                    value:
+                        rolController.text.isNotEmpty
+                            ? rolController.text
+                            : null,
+                    decoration: InputDecoration(
+                      labelText: "Rol",
+                      labelStyle: GoogleFonts.montserrat(),
+                    ),
+                    style: GoogleFonts.montserrat(color: Colors.black),
+                    items: const [
+                      DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                      DropdownMenuItem(
+                        value: 'voluntario',
+                        child: Text('Voluntario'),
                       ),
-                    ),
-                    child: Text(
-                      "Guardar",
-                      style: GoogleFonts.montserrat(color: Colors.white),
-                    ),
+                    ],
+                    onChanged: (value) => rolController.text = value!,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          'Cancelar',
+                          style: GoogleFonts.montserrat(
+                            color: Colors.deepPurple,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate()) return;
+
+                          final actualizado = await actualizarUsuario(
+                            Usuario(
+                              id: usuario.id,
+                              nombre: nombreController.text,
+                              email: emailController.text,
+                              rol: rolController.text,
+                            ),
+                          );
+
+                          if (actualizado) {
+                            final userProvider = Provider.of<UserProvider>(
+                              context,
+                              listen: false,
+                            );
+                            if (usuario.id == userProvider.idUsuario) {
+                              userProvider.setUser(
+                                idUsuario: usuario.id!,
+                                nombre: nombreController.text,
+                                email: emailController.text,
+                                rol: rolController.text,
+                              );
+                            }
+
+                            Navigator.pop(context);
+                            onUpdate();
+
+                            Future.delayed(
+                              const Duration(milliseconds: 100),
+                              () {
+                                Notificador.mostrar(
+                                  context: context,
+                                  mensaje: "✅ Perfil actualizado correctamente",
+                                  tipo: TipoNotificacion.success,
+                                );
+                              },
+                            );
+                          } else {
+                            Notificador.mostrar(
+                              context: context,
+                              mensaje: "❌ Correo ya en uso por otro usuario",
+                              tipo: TipoNotificacion.error,
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF6A1B9A),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: Text(
+                          "Guardar",
+                          style: GoogleFonts.montserrat(color: Colors.white),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
+            ),
           ),
         ),
       );
@@ -130,6 +177,8 @@ void editarUsuarioModal(
 }
 
 void mostrarFormularioNuevoUsuario(BuildContext context, VoidCallback onCrear) {
+  final formKey = GlobalKey<FormState>();
+  bool _verPassword = false;
   final nombreController = TextEditingController();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -143,106 +192,144 @@ void mostrarFormularioNuevoUsuario(BuildContext context, VoidCallback onCrear) {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Nuevo Usuario',
-                style: GoogleFonts.montserrat(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: nombreController,
-                decoration: InputDecoration(
-                  labelText: "Nombre",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-              ),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-              ),
-              TextField(
-                controller: passwordController,
-                decoration: InputDecoration(
-                  labelText: "Contraseña",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-              ),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: "Rol",
-                  labelStyle: GoogleFonts.montserrat(),
-                ),
-                style: GoogleFonts.montserrat(color: Colors.black),
-                items: const [
-                  DropdownMenuItem(value: 'admin', child: Text('Admin')),
-                  DropdownMenuItem(
-                    value: 'voluntario',
-                    child: Text('Voluntario'),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Nuevo Usuario',
+                  style: GoogleFonts.montserrat(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-                onChanged: (value) {
-                  rolController.text = value!;
-                },
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(ctx),
-                    child: Text(
-                      'Cancelar',
-                      style: GoogleFonts.montserrat(color: Colors.deepPurple),
+                ),
+                const SizedBox(height: 20),
+                TextFormField(
+                  controller: nombreController,
+                  validator: validarNombre,
+                  decoration: InputDecoration(
+                    labelText: "Nombre",
+                    labelStyle: GoogleFonts.montserrat(),
+                  ),
+                ),
+                TextFormField(
+                  controller: emailController,
+                  validator: validarCorreo,
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                    labelStyle: GoogleFonts.montserrat(),
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                TextFormField(
+                  controller: passwordController,
+                  obscureText: !_verPassword,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'La contraseña es obligatoria';
+                    }
+                    if (value.length < 6) {
+                      return 'Debe tener al menos 6 caracteres';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    labelText: "Contraseña",
+                    labelStyle: GoogleFonts.montserrat(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _verPassword ? Icons.visibility_off : Icons.visibility,
+                        color: Colors.deepPurple,
+                      ),
+                      onPressed: () {
+                        _verPassword = !_verPassword;
+                        // reconstruye el widget del formulario
+                        (ctx as Element).markNeedsBuild();
+                      },
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final creado = await crearUsuario(
-                        Usuario(
-                          nombre: nombreController.text,
-                          email: emailController.text,
-                          password: passwordController.text,
-                          rol: rolController.text,
-                        ),
-                      );
-
-                      if (creado) {
-                        Navigator.pop(ctx);
-                        onCrear();
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              "Correo ya en uso",
-                              style: GoogleFonts.montserrat(),
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6A1B9A),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+                ),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: "Rol",
+                    labelStyle: GoogleFonts.montserrat(),
+                  ),
+                  style: GoogleFonts.montserrat(color: Colors.black),
+                  validator:
+                      (value) =>
+                          value == null || value.isEmpty
+                              ? 'Selecciona un rol'
+                              : null,
+                  items: const [
+                    DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                    DropdownMenuItem(
+                      value: 'voluntario',
+                      child: Text('Voluntario'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    rolController.text = value!;
+                  },
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: Text(
+                        'Cancelar',
+                        style: GoogleFonts.montserrat(color: Colors.deepPurple),
                       ),
                     ),
-                    child: Text(
-                      "Guardar",
-                      style: GoogleFonts.montserrat(color: Colors.white),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () async {
+                        if (!formKey.currentState!.validate()) return;
+
+                        final creado = await crearUsuario(
+                          Usuario(
+                            nombre: nombreController.text,
+                            email: emailController.text,
+                            password: passwordController.text,
+                            rol: rolController.text,
+                          ),
+                        );
+
+                        if (creado) {
+                          Navigator.pop(ctx);
+                          onCrear();
+                          Future.delayed(const Duration(milliseconds: 100), () {
+                            Notificador.mostrar(
+                              context: context,
+                              mensaje: "✅ Usuario creado exitosamente",
+                              tipo: TipoNotificacion.success,
+                            );
+                          });
+                        } else {
+                          Notificador.mostrar(
+                            context: context,
+                            mensaje: "❌ Correo ya en uso",
+                            tipo: TipoNotificacion.error,
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF6A1B9A),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Text(
+                        "Guardar",
+                        style: GoogleFonts.montserrat(color: Colors.white),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -284,6 +371,11 @@ class _UsuariosPageState extends State<UsuariosPage> {
 
   @override
   Widget build(BuildContext context) {
+    final idUsuarioLogueado = Provider.of<UserProvider>(context).idUsuario;
+    final listaVisible =
+        usuariosFiltrados
+            .where((usuario) => usuario.id != idUsuarioLogueado)
+            .toList();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -338,9 +430,9 @@ class _UsuariosPageState extends State<UsuariosPage> {
                       ),
                     )
                     : ListView.builder(
-                      itemCount: usuariosFiltrados.length,
+                      itemCount: listaVisible.length,
                       itemBuilder: (context, index) {
-                        final usuario = usuariosFiltrados[index];
+                        final usuario = listaVisible[index];
                         return ListTile(
                           title: Text(
                             usuario.nombre,
@@ -449,13 +541,16 @@ class _UsuariosPageState extends State<UsuariosPage> {
                                     );
                                     if (eliminado) {
                                       cargarUsuarios();
+                                      Notificador.mostrar(
+                                        context: context,
+                                        mensaje: "Usuario eliminado",
+                                        tipo: TipoNotificacion.success,
+                                      );
                                     } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        const SnackBar(
-                                          content: Text("Error al eliminar"),
-                                        ),
+                                      Notificador.mostrar(
+                                        context: context,
+                                        mensaje: "Error al eliminar el usuario",
+                                        tipo: TipoNotificacion.error,
                                       );
                                     }
                                   }

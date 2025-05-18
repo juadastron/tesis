@@ -30,6 +30,7 @@ class ConfiguracionService {
       headers: {'Content-Type': 'application/json'},
       body: json.encode({
         'id_dispositivo': config.idDispositivo,
+        'imei': config.imei,
         'activar_horario_nocturno': config.activarHorario,
         'hora_inicio_nocturna': config.horaInicio,
         'hora_fin_nocturna': config.horaFin,

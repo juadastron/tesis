@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/models/usuario_model.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import '../services/animal_service.dart';
 import '../models/animal_model.dart';
+import '../pages/usuarios_page.dart' show editarUsuarioModal;
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -42,7 +44,7 @@ class HomePage extends StatelessWidget {
           'route': '/dispositivos',
           'color': Colors.blue, // Azul
         },
-        {
+      {
         'icon': FontAwesomeIcons.info,
         'text': 'Quienes somos?',
         'route': '/mapa',
@@ -80,26 +82,78 @@ class HomePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.pets, size: 50, color: Colors.white),
+                  const CircleAvatar(
+                    backgroundColor: Colors.white,
+                    radius: 25,
+                    child: Icon(
+                      Icons.person,
+                      size: 30,
+                      color: Color(0xFF6A1B9A),
+                    ),
+                  ),
                   const SizedBox(height: 10),
+                  Text(
+                    user.nombre ?? 'Usuario',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   Text(
                     'Geo Little Paws',
                     style: GoogleFonts.montserrat(
-                      fontSize: 22,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Colors.white70,
                     ),
                   ),
                 ],
               ),
             ),
-            ...drawerItems.map((item) => _buildDrawerItem(
+            ...drawerItems.map(
+              (item) => _buildDrawerItem(
+                context,
+                icon: item['icon'],
+                text: item['text'],
+                route: item['route'],
+                iconColor: item['color'],
+              ),
+            ),
+            ListTile(
+              leading: const Icon(
+                Icons.account_circle,
+                color: Colors.deepPurple,
+              ),
+              title: Text(
+                'Editar perfil',
+                style: GoogleFonts.montserrat(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              onTap: () {
+                final usuarioLogueado = Usuario(
+                  id: user.idUsuario!,
+                  nombre: user.nombre ?? '',
+                  email: user.email ?? '',
+                  rol: user.rol ?? '',
+                );
+
+                Navigator.pop(
                   context,
-                  icon: item['icon'],
-                  text: item['text'],
-                  route: item['route'],
-                  iconColor: item['color'],
-                )),
+                ); // Cierra el drawer ANTES de abrir el modal
+
+                Future.delayed(const Duration(milliseconds: 200), () {
+                  editarUsuarioModal(context, usuarioLogueado, () {
+                    // Recarga si hace falta
+                  });
+                });
+              },
+            ),
+
             const Divider(),
             _buildDrawerItem(
               context,
@@ -209,7 +263,10 @@ class HomePage extends StatelessWidget {
                     padding: const EdgeInsets.all(20),
                     child: IconButton(
                       onPressed: () {
-                        Provider.of<UserProvider>(context, listen: false).logout();
+                        Provider.of<UserProvider>(
+                          context,
+                          listen: false,
+                        ).logout();
                         Navigator.pushReplacementNamed(context, '/login');
                       },
                       icon: const Icon(Icons.logout),
@@ -246,7 +303,8 @@ class HomePage extends StatelessWidget {
         ),
       ),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: onTap ??
+      onTap:
+          onTap ??
           () {
             if (route != null) {
               Navigator.pop(context);

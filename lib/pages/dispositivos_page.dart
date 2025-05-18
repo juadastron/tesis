@@ -118,7 +118,11 @@ class _DispositivosPageState extends State<DispositivosPage> {
                             children: [
                               const SizedBox(height: 4),
                               _buildEtiquetaEstado(dispositivo.estadoActual),
-                              if (dispositivo.estadoActual == 'asignado' &&
+                              if ([
+                                    'asignado',
+                                    'peligro',
+                                    'inactividad',
+                                  ].contains(dispositivo.estadoActual) &&
                                   dispositivo.nombreAnimal != null)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 6),
@@ -184,7 +188,7 @@ class _DispositivosPageState extends State<DispositivosPage> {
                                 ),
                                 visualDensity: VisualDensity.compact,
                                 onPressed: () async {
-                                  if (dispositivo.estadoActual == 'asignado') {
+                                  if (dispositivo.estadoActual != 'disponible') {
                                     // Mostrar advertencia
                                     await showDialog(
                                       context: context,
@@ -229,8 +233,9 @@ class _DispositivosPageState extends State<DispositivosPage> {
                                                 ),
                                                 child: Text(
                                                   'Ir a Animales',
-                                                  style:
-                                                      GoogleFonts.montserrat(color: Colors.white),
+                                                  style: GoogleFonts.montserrat(
+                                                    color: Colors.white,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -264,7 +269,13 @@ class _DispositivosPageState extends State<DispositivosPage> {
                                               ),
                                               ElevatedButton(
                                                 style: ElevatedButton.styleFrom(
-                                                  backgroundColor: const Color.fromRGBO(244, 67, 54, 1),
+                                                  backgroundColor:
+                                                      const Color.fromRGBO(
+                                                        244,
+                                                        67,
+                                                        54,
+                                                        1,
+                                                      ),
                                                 ),
                                                 onPressed:
                                                     () => Navigator.pop(
@@ -312,9 +323,27 @@ class _DispositivosPageState extends State<DispositivosPage> {
   }
 
   Widget _buildEtiquetaEstado(String estado) {
-    final esAsignado = estado == 'asignado';
-    final color = esAsignado ? Color(0xFF6A1B9A) : Colors.green;
-    final icono = esAsignado ? Icons.lock : Icons.check;
+    late IconData icono;
+    late Color color;
+
+    switch (estado) {
+      case 'asignado':
+        icono = Icons.lock;
+        color = Color(0xFF6A1B9A); // morado
+        break;
+      case 'peligro':
+        icono = Icons.warning_amber_rounded;
+        color = Colors.red;
+        break;
+      case 'inactividad':
+        icono = Icons.access_time;
+        color = Colors.orange;
+        break;
+      default:
+        icono = Icons.check_circle;
+        color = Colors.green;
+    }
+
     return _buildEtiquetaIcono(
       icono: icono,
       texto: 'Estado: $estado',
@@ -434,23 +463,37 @@ class _DispositivosPageState extends State<DispositivosPage> {
                           ),
                         ),
                         onPressed: () async {
-                          final creado = await crearDispositivo(
-                            Dispositivo(
-                              imei: imeiController.text,
-                              estadoActual: 'disponible',
-                              numeroCelular: numeroCelularController.text,
-                            ),
+                          final dispositivo = Dispositivo(
+                            imei: imeiController.text,
+                            estadoActual: 'disponible',
+                            numeroCelular: numeroCelularController.text,
                           );
-                          if (creado) {
+
+                          final nuevo = await crearDispositivoYConfigurar(
+                            dispositivo,
+                          );
+
+                          if (nuevo != null) {
                             Navigator.pop(ctx);
                             onCrear();
+
+                            Navigator.pushNamed(
+                              context,
+                              '/configuracion',
+                              arguments: {'idDispositivo': nuevo.id},
+                            );
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "✅ Este dispositivo se creo con configuraciones por defecto, puedes cambiarlas",
+                                ),
+                              ),
+                            );
                           } else {
                             ScaffoldMessenger.of(ctx).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Error al crear',
-                                  style: GoogleFonts.montserrat(),
-                                ),
+                              const SnackBar(
+                                content: Text("❌ Error al crear o configurar"),
                               ),
                             );
                           }

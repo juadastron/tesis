@@ -5,8 +5,8 @@ class ConfiguracionDispositivo {
   final String horaInicio;
   final String horaFin;
 
-  // NUEVOS CAMPOS
   final bool activarSiesta;
+  final String imei;
   final String horaInicioSiesta;
   final String horaFinSiesta;
   final int umbralInactividadMin;
@@ -16,6 +16,7 @@ class ConfiguracionDispositivo {
   ConfiguracionDispositivo({
     this.id,
     required this.idDispositivo,
+    required this.imei,
     this.activarHorario = false,
     this.horaInicio = '22:00:00',
     this.horaFin = '06:00:00',
@@ -32,6 +33,7 @@ class ConfiguracionDispositivo {
   ) => ConfiguracionDispositivo(
     id: int.tryParse(json['id_config'].toString()),
     idDispositivo: int.parse(json['id_dispositivo'].toString()),
+    imei: json['imei'] ?? '',
     activarHorario: json['activar_horario_nocturno'].toString() == '1',
     horaInicio: json['hora_inicio_nocturna'] ?? '22:00:00',
     horaFin: json['hora_fin_nocturna'] ?? '06:00:00',
@@ -47,6 +49,7 @@ class ConfiguracionDispositivo {
 
   Map<String, dynamic> toJson() => {
     "id_dispositivo": idDispositivo,
+    "imei": imei,
     "activar_horario_nocturno": activarHorario ? 1 : 0,
     "hora_inicio_nocturna": horaInicio,
     "hora_fin_nocturna": horaFin,

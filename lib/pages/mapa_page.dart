@@ -44,25 +44,25 @@ class _MapaPageState extends State<MapaPage> {
   Future<void> _cargarDispositivos() async {
     try {
       final dispositivosAsignados = await obtenerDispositivosAsignados();
-
       setState(() {
         _dispositivos = dispositivosAsignados;
-        _marcadores = _dispositivos.map((d) {
-          return Marker(
-            markerId: MarkerId(d['id_dispositivo'].toString()),
-            position: LatLng(
-              double.parse(d['latitud']),
-              double.parse(d['longitud']),
-            ),
-            icon: _iconoPatita ?? BitmapDescriptor.defaultMarker,
-            infoWindow: InfoWindow(
-              title: d['nombre_animal'] != null && d['especie_animal'] != null
-                  ? '${d['nombre_animal']} (${d['especie_animal']})'
-                  : 'Dispositivo',
-            ),
-          );
-        }).toSet();
+        _marcadores =
+            _dispositivos.map((d) {
+              return Marker(
+                markerId: MarkerId(d['id_dispositivo'].toString()),
+                position: LatLng(d['latitud'], d['longitud']),
+                icon: _iconoPatita ?? BitmapDescriptor.defaultMarker,
+                infoWindow: InfoWindow(
+                  title:
+                      d['nombre_animal'] != null && d['especie_animal'] != null
+                          ? '${d['nombre_animal']} (${d['especie_animal']})'
+                          : 'Dispositivo',
+                ),
+              );
+            }).toSet();
       });
+      print('Dispositivos recibidos: $_dispositivos');
+      print('Marcadores: $_marcadores');
     } catch (e) {
       print("Error al cargar dispositivos: $e");
     }
@@ -72,8 +72,8 @@ class _MapaPageState extends State<MapaPage> {
     final dispositivo = _dispositivos.firstWhere(
       (d) => d['id_dispositivo'].toString() == idDispositivo,
     );
-    final lat = double.parse(dispositivo['latitud']);
-    final lng = double.parse(dispositivo['longitud']);
+    final lat = dispositivo['latitud'];
+    final lng = dispositivo['longitud'];
     _mapController?.animateCamera(
       CameraUpdate.newLatLngZoom(LatLng(lat, lng), 17),
     );
@@ -83,8 +83,8 @@ class _MapaPageState extends State<MapaPage> {
     final location = Location();
     final ubicacion = await location.getLocation();
     final origen = LatLng(ubicacion.latitude!, ubicacion.longitude!);
-    final ruta = await DireccionService.obtenerRuta(origen, destino);
-
+    final ruta = await DireccionService.obtenerRuta(origen, destino); 
+    print('Ubicación actual: ${ubicacion.latitude}, ${ubicacion.longitude}');
     setState(() {
       _polilineas = {
         Polyline(
@@ -103,7 +103,10 @@ class _MapaPageState extends State<MapaPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ubicación de los animales', style: GoogleFonts.montserrat()),
+        title: Text(
+          'Ubicación de los animales',
+          style: GoogleFonts.montserrat(),
+        ),
         backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF6A1B9A),
       ),
@@ -115,7 +118,9 @@ class _MapaPageState extends State<MapaPage> {
             polylines: _polilineas,
             onMapCreated: (controller) => _mapController = controller,
             gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-              Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
+              Factory<OneSequenceGestureRecognizer>(
+                () => EagerGestureRecognizer(),
+              ),
             },
           ),
           SafeArea(
@@ -127,7 +132,10 @@ class _MapaPageState extends State<MapaPage> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFF6A1B9A), width: 1.5),
+                      border: Border.all(
+                        color: const Color(0xFF6A1B9A),
+                        width: 1.5,
+                      ),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black26,
@@ -143,20 +151,27 @@ class _MapaPageState extends State<MapaPage> {
                         isExpanded: true,
                         hint: Text(
                           'Seleccionar dispositivo',
-                          style: GoogleFonts.montserrat(color: Colors.grey[700]),
+                          style: GoogleFonts.montserrat(
+                            color: Colors.grey[700],
+                          ),
                         ),
-                        icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF6A1B9A)),
+                        icon: const Icon(
+                          Icons.arrow_drop_down,
+                          color: Color(0xFF6A1B9A),
+                        ),
                         style: GoogleFonts.montserrat(color: Colors.black),
-                        items: _dispositivos.map((d) {
-                          return DropdownMenuItem<String>(
-                            value: d['id_dispositivo'].toString(),
-                            child: Text(
-                              d['nombre_animal'] != null && d['especie_animal'] != null
-                                  ? '${d['nombre_animal']} (${d['especie_animal']})'
-                                  : d['imei'] ?? 'Dispositivo',
-                            ),
-                          );
-                        }).toList(),
+                        items:
+                            _dispositivos.map((d) {
+                              return DropdownMenuItem<String>(
+                                value: d['id_dispositivo'].toString(),
+                                child: Text(
+                                  d['nombre_animal'] != null &&
+                                          d['especie_animal'] != null
+                                      ? '${d['nombre_animal']} (${d['especie_animal']})'
+                                      : d['imei'] ?? 'Dispositivo',
+                                ),
+                              );
+                            }).toList(),
                         onChanged: (value) {
                           setState(() {
                             _dispositivoSeleccionado = value;
@@ -171,10 +186,13 @@ class _MapaPageState extends State<MapaPage> {
                     onPressed: () {
                       if (_dispositivoSeleccionado != null) {
                         final dispositivo = _dispositivos.firstWhere(
-                          (d) => d['id_dispositivo'].toString() == _dispositivoSeleccionado,
+                          (d) =>
+                              d['id_dispositivo'].toString() ==
+                              _dispositivoSeleccionado,
                         );
-                        final lat = double.parse(dispositivo['latitud']);
-                        final lng = double.parse(dispositivo['longitud']);
+                        final lat = dispositivo['latitud'];
+                        final lng = dispositivo['longitud'];
+                        
                         _mostrarRuta(LatLng(lat, lng));
                       }
                     },
@@ -183,7 +201,9 @@ class _MapaPageState extends State<MapaPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF6A1B9A),
                       foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ],
