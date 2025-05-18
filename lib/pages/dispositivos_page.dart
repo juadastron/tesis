@@ -14,6 +14,7 @@ class DispositivosPage extends StatefulWidget {
 }
 
 class _DispositivosPageState extends State<DispositivosPage> {
+  final numeroCelularController = TextEditingController();
   List<Dispositivo> todosLosDispositivos = [];
   List<Dispositivo> dispositivosFiltrados = [];
   TextEditingController searchController = TextEditingController();
@@ -117,7 +118,11 @@ class _DispositivosPageState extends State<DispositivosPage> {
                             children: [
                               const SizedBox(height: 4),
                               _buildEtiquetaEstado(dispositivo.estadoActual),
-                              if (dispositivo.estadoActual == 'asignado' &&
+                              if ([
+                                    'asignado',
+                                    'peligro',
+                                    'inactividad',
+                                  ].contains(dispositivo.estadoActual) &&
                                   dispositivo.nombreAnimal != null)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 6),
@@ -125,6 +130,17 @@ class _DispositivosPageState extends State<DispositivosPage> {
                                     icono: Icons.pets,
                                     texto:
                                         'Asignado a: ${dispositivo.nombreAnimal} (${dispositivo.especieAnimal})',
+                                  ),
+                                ),
+                              if (dispositivo.numeroCelular != null &&
+                                  dispositivo.numeroCelular!.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 6),
+                                  child: _buildEtiquetaIcono(
+                                    icono: Icons.phone_android,
+                                    texto:
+                                        '# celular: ${dispositivo.numeroCelular}',
+                                    color: Colors.indigo,
                                   ),
                                 ),
                             ],
@@ -172,7 +188,118 @@ class _DispositivosPageState extends State<DispositivosPage> {
                                 ),
                                 visualDensity: VisualDensity.compact,
                                 onPressed: () async {
-                                  // tu lógica de eliminación
+                                  if (dispositivo.estadoActual != 'disponible') {
+                                    // Mostrar advertencia
+                                    await showDialog(
+                                      context: context,
+                                      builder:
+                                          (ctx) => AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                            title: Text(
+                                              'No se puede eliminar',
+                                              style: GoogleFonts.montserrat(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            content: Text(
+                                              'Este dispositivo está asignado a un animal.\n\nDebes desvincularlo primero antes de eliminarlo.',
+                                              style: GoogleFonts.montserrat(),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    () => Navigator.pop(ctx),
+                                                child: Text(
+                                                  'Cancelar',
+                                                  style:
+                                                      GoogleFonts.montserrat(),
+                                                ),
+                                              ),
+                                              ElevatedButton(
+                                                onPressed: () {
+                                                  Navigator.pop(ctx);
+                                                  Navigator.pushNamed(
+                                                    context,
+                                                    '/animales',
+                                                  );
+                                                },
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: const Color(
+                                                    0xFF6A1B9A,
+                                                  ),
+                                                ),
+                                                child: Text(
+                                                  'Ir a Animales',
+                                                  style: GoogleFonts.montserrat(
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                    );
+                                  } else {
+                                    // Confirmar eliminación si no está asignado
+                                    final confirmar = await showDialog<bool>(
+                                      context: context,
+                                      builder:
+                                          (ctx) => AlertDialog(
+                                            title: const Text(
+                                              '¿Confirmar eliminación?',
+                                            ),
+                                            content: Text(
+                                              '¿Estás seguro de que deseas eliminar este dispositivo?',
+                                              style: GoogleFonts.montserrat(),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    () => Navigator.pop(
+                                                      ctx,
+                                                      false,
+                                                    ),
+                                                child: Text(
+                                                  'Cancelar',
+                                                  style:
+                                                      GoogleFonts.montserrat(),
+                                                ),
+                                              ),
+                                              ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      const Color.fromRGBO(
+                                                        244,
+                                                        67,
+                                                        54,
+                                                        1,
+                                                      ),
+                                                ),
+                                                onPressed:
+                                                    () => Navigator.pop(
+                                                      ctx,
+                                                      true,
+                                                    ),
+                                                child: Text(
+                                                  'Eliminar',
+                                                  style: GoogleFonts.montserrat(
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                    );
+
+                                    if (confirmar == true) {
+                                      final ok = await eliminarDispositivo(
+                                        dispositivo.id!,
+                                      );
+                                      if (ok) cargarDispositivos();
+                                    }
+                                  }
                                 },
                               ),
                             ],
@@ -196,9 +323,27 @@ class _DispositivosPageState extends State<DispositivosPage> {
   }
 
   Widget _buildEtiquetaEstado(String estado) {
-    final esAsignado = estado == 'asignado';
-    final color = esAsignado ? Color(0xFF6A1B9A) : Colors.green;
-    final icono = esAsignado ? Icons.lock : Icons.check;
+    late IconData icono;
+    late Color color;
+
+    switch (estado) {
+      case 'asignado':
+        icono = Icons.lock;
+        color = Color(0xFF6A1B9A); // morado
+        break;
+      case 'peligro':
+        icono = Icons.warning_amber_rounded;
+        color = Colors.red;
+        break;
+      case 'inactividad':
+        icono = Icons.access_time;
+        color = Colors.orange;
+        break;
+      default:
+        icono = Icons.check_circle;
+        color = Colors.green;
+    }
+
     return _buildEtiquetaIcono(
       icono: icono,
       texto: 'Estado: $estado',
@@ -263,6 +408,24 @@ class _DispositivosPageState extends State<DispositivosPage> {
                   ),
                   const SizedBox(height: 20),
                   TextField(
+                    controller: numeroCelularController,
+                    decoration: InputDecoration(
+                      labelText: 'Número de celular',
+                      labelStyle: GoogleFonts.montserrat(),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6A1B9A)),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF6A1B9A),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    keyboardType: TextInputType.phone,
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
                     controller: imeiController,
                     decoration: InputDecoration(
                       labelText: 'IMEI',
@@ -300,22 +463,37 @@ class _DispositivosPageState extends State<DispositivosPage> {
                           ),
                         ),
                         onPressed: () async {
-                          final creado = await crearDispositivo(
-                            Dispositivo(
-                              imei: imeiController.text,
-                              estadoActual: 'disponible',
-                            ),
+                          final dispositivo = Dispositivo(
+                            imei: imeiController.text,
+                            estadoActual: 'disponible',
+                            numeroCelular: numeroCelularController.text,
                           );
-                          if (creado) {
+
+                          final nuevo = await crearDispositivoYConfigurar(
+                            dispositivo,
+                          );
+
+                          if (nuevo != null) {
                             Navigator.pop(ctx);
                             onCrear();
+
+                            Navigator.pushNamed(
+                              context,
+                              '/configuracion',
+                              arguments: {'idDispositivo': nuevo.id},
+                            );
+
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "✅ Este dispositivo se creo con configuraciones por defecto, puedes cambiarlas",
+                                ),
+                              ),
+                            );
                           } else {
                             ScaffoldMessenger.of(ctx).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Error al crear',
-                                  style: GoogleFonts.montserrat(),
-                                ),
+                              const SnackBar(
+                                content: Text("❌ Error al crear o configurar"),
                               ),
                             );
                           }
@@ -340,6 +518,9 @@ class _DispositivosPageState extends State<DispositivosPage> {
     VoidCallback onUpdate,
   ) {
     final imeiController = TextEditingController(text: dispositivo.imei);
+    final numeroCelularController = TextEditingController(
+      text: dispositivo.numeroCelular ?? '',
+    );
     final estadoController = TextEditingController(
       text: dispositivo.estadoActual,
     );
@@ -364,6 +545,24 @@ class _DispositivosPageState extends State<DispositivosPage> {
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: numeroCelularController,
+                    decoration: InputDecoration(
+                      labelText: 'Número de celular',
+                      labelStyle: GoogleFonts.montserrat(),
+                      enabledBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(color: Color(0xFF6A1B9A)),
+                      ),
+                      focusedBorder: const UnderlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color(0xFF6A1B9A),
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    keyboardType: TextInputType.phone,
                   ),
                   const SizedBox(height: 20),
                   TextField(
@@ -408,6 +607,7 @@ class _DispositivosPageState extends State<DispositivosPage> {
                               id: dispositivo.id,
                               imei: imeiController.text,
                               estadoActual: estadoController.text,
+                              numeroCelular: numeroCelularController.text,
                             ),
                           );
                           if (actualizado) {
