@@ -2,9 +2,12 @@
 // Etiquetas estilo: icono + texto en una burbuja redondeada gris clara
 
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../models/dispositivo_model.dart';
 import '../services/dispositivo_service.dart';
+import '../services/permisos_service.dart';
 
 class DispositivosPage extends StatefulWidget {
   const DispositivosPage({super.key});
@@ -14,14 +17,16 @@ class DispositivosPage extends StatefulWidget {
 }
 
 class _DispositivosPageState extends State<DispositivosPage> {
+  late UserProvider userProvider;
   final numeroCelularController = TextEditingController();
   List<Dispositivo> todosLosDispositivos = [];
   List<Dispositivo> dispositivosFiltrados = [];
   TextEditingController searchController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    userProvider = Provider.of<UserProvider>(context, listen: false);
     cargarDispositivos();
   }
 
@@ -148,158 +153,173 @@ class _DispositivosPageState extends State<DispositivosPage> {
                           trailing: Wrap(
                             spacing: 4, // espacio entre íconos
                             children: [
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.settings,
-                                  color: Colors.deepPurple,
+                              FutureBuilder<bool>(
+                                future: PermisosService.verificarPermisoEdicion(
+                                  userProvider.idUsuario!,
+                                  dispositivo.id!,
                                 ),
-                                tooltip: 'Configurar',
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    '/configuracion',
-                                    arguments: {
-                                      'idDispositivo': dispositivo.id,
-                                    },
-                                  );
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Colors.orange,
-                                ),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () {
-                                  mostrarEditarDispositivo(
-                                    context,
-                                    dispositivo,
-                                    () {
-                                      cargarDispositivos();
-                                    },
-                                  );
-                                },
-                              ),
-                              IconButton(
-                                icon: const Icon(
-                                  Icons.delete,
-                                  color: Colors.red,
-                                ),
-                                visualDensity: VisualDensity.compact,
-                                onPressed: () async {
-                                  if (dispositivo.estadoActual != 'disponible') {
-                                    // Mostrar advertencia
-                                    await showDialog(
-                                      context: context,
-                                      builder:
-                                          (ctx) => AlertDialog(
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(20),
-                                            ),
-                                            title: Text(
-                                              'No se puede eliminar',
-                                              style: GoogleFonts.montserrat(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            content: Text(
-                                              'Este dispositivo está asignado a un animal.\n\nDebes desvincularlo primero antes de eliminarlo.',
-                                              style: GoogleFonts.montserrat(),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.pop(ctx),
-                                                child: Text(
-                                                  'Cancelar',
-                                                  style:
-                                                      GoogleFonts.montserrat(),
-                                                ),
-                                              ),
-                                              ElevatedButton(
-                                                onPressed: () {
-                                                  Navigator.pop(ctx);
-                                                  Navigator.pushNamed(
-                                                    context,
-                                                    '/animales',
-                                                  );
-                                                },
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: const Color(
-                                                    0xFF6A1B9A,
-                                                  ),
-                                                ),
-                                                child: Text(
-                                                  'Ir a Animales',
-                                                  style: GoogleFonts.montserrat(
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                    );
-                                  } else {
-                                    // Confirmar eliminación si no está asignado
-                                    final confirmar = await showDialog<bool>(
-                                      context: context,
-                                      builder:
-                                          (ctx) => AlertDialog(
-                                            title: const Text(
-                                              '¿Confirmar eliminación?',
-                                            ),
-                                            content: Text(
-                                              '¿Estás seguro de que deseas eliminar este dispositivo?',
-                                              style: GoogleFonts.montserrat(),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      ctx,
-                                                      false,
-                                                    ),
-                                                child: Text(
-                                                  'Cancelar',
-                                                  style:
-                                                      GoogleFonts.montserrat(),
-                                                ),
-                                              ),
-                                              ElevatedButton(
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      const Color.fromRGBO(
-                                                        244,
-                                                        67,
-                                                        54,
-                                                        1,
-                                                      ),
-                                                ),
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      ctx,
-                                                      true,
-                                                    ),
-                                                child: Text(
-                                                  'Eliminar',
-                                                  style: GoogleFonts.montserrat(
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                    );
-
-                                    if (confirmar == true) {
-                                      final ok = await eliminarDispositivo(
-                                        dispositivo.id!,
-                                      );
-                                      if (ok) cargarDispositivos();
-                                    }
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState !=
+                                      ConnectionState.done) {
+                                    return const SizedBox.shrink(); // mientras carga
                                   }
+
+                                  if (snapshot.hasData &&
+                                      snapshot.data == true) {
+                                    return Wrap(
+                                      spacing: 4,
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.settings,
+                                            color: Colors.deepPurple,
+                                          ),
+                                          tooltip: 'Configurar',
+                                          visualDensity: VisualDensity.compact,
+                                          onPressed: () {
+                                            Navigator.pushNamed(
+                                              context,
+                                              '/configuracion',
+                                              arguments: {
+                                                'idDispositivo': dispositivo.id,
+                                              },
+                                            );
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.edit,
+                                            color: Colors.orange,
+                                          ),
+                                          tooltip: 'Editar',
+                                          visualDensity: VisualDensity.compact,
+                                          onPressed: () {
+                                            mostrarEditarDispositivo(
+                                              context,
+                                              dispositivo,
+                                              () {
+                                                cargarDispositivos();
+                                              },
+                                            );
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                          ),
+                                          tooltip: 'Eliminar',
+                                          visualDensity: VisualDensity.compact,
+                                          onPressed: () async {
+                                            if (dispositivo.estadoActual != 'disponible') {
+                                              await showDialog(
+                                                context: context,
+                                                builder:
+                                                    (ctx) => AlertDialog(
+                                                      shape: RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              20,
+                                                            ),
+                                                      ),
+                                                      title: const Text(
+                                                        'No se puede eliminar',
+                                                      ),
+                                                      content: const Text(
+                                                        'Este dispositivo está asignado a un animal.\n\nDebes desvincularlo primero antes de eliminarlo.',
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed:
+                                                              () =>
+                                                                  Navigator.pop(
+                                                                    ctx,
+                                                                  ),
+                                                          child: const Text(
+                                                            'Cancelar',
+                                                          ),
+                                                        ),
+                                                        ElevatedButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(ctx);
+                                                            Navigator.pushNamed(
+                                                              context,
+                                                              '/animales',
+                                                            );
+                                                          },
+                                                          style:
+                                                              ElevatedButton.styleFrom(
+                                                                backgroundColor:
+                                                                    const Color(
+                                                                      0xFF6A1B9A,
+                                                                    ),
+                                                              ),
+                                                          child: const Text(
+                                                            'Ir a Animales',
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                              );
+                                            } else {
+                                              final confirmar = await showDialog<
+                                                bool
+                                              >(
+                                                context: context,
+                                                builder:
+                                                    (ctx) => AlertDialog(
+                                                      title: const Text(
+                                                        '¿Confirmar eliminación?',
+                                                      ),
+                                                      content: const Text(
+                                                        '¿Estás seguro de que deseas eliminar este dispositivo?',
+                                                      ),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed:
+                                                              () =>
+                                                                  Navigator.pop(
+                                                                    ctx,
+                                                                    false,
+                                                                  ),
+                                                          child: const Text(
+                                                            'Cancelar',
+                                                          ),
+                                                        ),
+                                                        ElevatedButton(
+                                                          style:
+                                                              ElevatedButton.styleFrom(
+                                                                backgroundColor:
+                                                                    Colors.red,
+                                                              ),
+                                                          onPressed:
+                                                              () =>
+                                                                  Navigator.pop(
+                                                                    ctx,
+                                                                    true,
+                                                                  ),
+                                                          child: const Text(
+                                                            'Eliminar',
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                              );
+
+                                              if (confirmar == true) {
+                                                final ok =
+                                                    await eliminarDispositivo(
+                                                      dispositivo.id!,
+                                                    );
+                                                if (ok) cargarDispositivos();
+                                              }
+                                            }
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  }
+                                  return const SizedBox.shrink(); // si no tiene permisos
                                 },
                               ),
                             ],
@@ -310,15 +330,18 @@ class _DispositivosPageState extends State<DispositivosPage> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF6A1B9A),
-        onPressed: () {
-          mostrarCrearDispositivo(context, () {
-            cargarDispositivos();
-          });
-        },
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      floatingActionButton:
+          userProvider.rol == 'admin'
+              ? FloatingActionButton(
+                backgroundColor: const Color(0xFF6A1B9A),
+                onPressed: () {
+                  mostrarCrearDispositivo(context, () {
+                    cargarDispositivos();
+                  });
+                },
+                child: const Icon(Icons.add, color: Colors.white),
+              )
+              : null,
     );
   }
 
@@ -383,8 +406,16 @@ class _DispositivosPageState extends State<DispositivosPage> {
 
   // 🔵 Modal para crear dispositivo
   void mostrarCrearDispositivo(BuildContext context, VoidCallback onCrear) {
+    // 🔐 Validación interna por seguridad
+    if (userProvider.rol != 'admin') {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("❌ No tienes permisos para agregar dispositivos."),
+        ),
+      );
+      return;
+    }
     final imeiController = TextEditingController();
-
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -471,6 +502,7 @@ class _DispositivosPageState extends State<DispositivosPage> {
 
                           final nuevo = await crearDispositivoYConfigurar(
                             dispositivo,
+                            userProvider.idUsuario!,
                           );
 
                           if (nuevo != null) {
@@ -602,6 +634,23 @@ class _DispositivosPageState extends State<DispositivosPage> {
                           ),
                         ),
                         onPressed: () async {
+                          final puedeEditar =
+                              await PermisosService.verificarPermisoEdicion(
+                                userProvider.idUsuario!,
+                                dispositivo.id!,
+                              );
+                          if (!puedeEditar) {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(ctx).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  "❌ No tienes permisos para editar este dispositivo.",
+                                  style: GoogleFonts.montserrat(),
+                                ),
+                              ),
+                            );
+                            return;
+                          }
                           final actualizado = await actualizarDispositivo(
                             Dispositivo(
                               id: dispositivo.id,

@@ -22,6 +22,8 @@ class _MapaPageState extends State<MapaPage> {
   Set<Polyline> _polilineas = {};
   List<dynamic> _dispositivos = [];
   String? _dispositivoSeleccionado;
+  String _modoSeleccionado = 'foot-walking';
+  Marker? _miUbicacion;
 
   static const CameraPosition _posicionInicial = CameraPosition(
     target: LatLng(-3.99313, -79.20422),
@@ -83,9 +85,23 @@ class _MapaPageState extends State<MapaPage> {
     final location = Location();
     final ubicacion = await location.getLocation();
     final origen = LatLng(ubicacion.latitude!, ubicacion.longitude!);
-    final ruta = await DireccionService.obtenerRuta(origen, destino); 
-    print('Ubicación actual: ${ubicacion.latitude}, ${ubicacion.longitude}');
+    final ruta = await DireccionService.obtenerRuta(
+      origen,
+      destino,
+      _modoSeleccionado,
+    );
+
+    // 🔵 Crea marcador de tu ubicación
+    final marcadorUbicacion = Marker(
+      markerId: const MarkerId('mi_ubicacion'),
+      position: origen,
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+      infoWindow: const InfoWindow(title: 'Estás aquí'),
+    );
+
     setState(() {
+      _miUbicacion = marcadorUbicacion;
+
       _polilineas = {
         Polyline(
           polylineId: const PolylineId('ruta'),
@@ -94,9 +110,30 @@ class _MapaPageState extends State<MapaPage> {
           width: 4,
         ),
       };
+
+      // Agrega el marcador de ubicación a la lista
+      _marcadores.add(_miUbicacion!);
     });
 
     _mapController?.animateCamera(CameraUpdate.newLatLngZoom(origen, 15));
+  }
+
+  Widget _buildBotonModo(IconData icono, String modo) {
+    return FloatingActionButton(
+      heroTag: modo,
+      onPressed: () {
+        setState(() {
+          _modoSeleccionado = modo;
+        });
+      },
+      backgroundColor:
+          _modoSeleccionado == modo ? const Color(0xFF6A1B9A) : Colors.white,
+      foregroundColor:
+          _modoSeleccionado == modo ? Colors.white : const Color(0xFF6A1B9A),
+      elevation: 4,
+      mini: true,
+      child: Icon(icono),
+    );
   }
 
   @override
@@ -192,7 +229,6 @@ class _MapaPageState extends State<MapaPage> {
                         );
                         final lat = dispositivo['latitud'];
                         final lng = dispositivo['longitud'];
-                        
                         _mostrarRuta(LatLng(lat, lng));
                       }
                     },
@@ -208,6 +244,22 @@ class _MapaPageState extends State<MapaPage> {
                   ),
                 ],
               ),
+            ),
+          ),
+
+          // Selector flotante de modo de transporte
+          Positioned(
+            bottom: 140,
+            right: 20,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildBotonModo(Icons.directions_walk, 'foot-walking'),
+                const SizedBox(height: 10),
+                _buildBotonModo(Icons.directions_car, 'driving-car'),
+                const SizedBox(height: 10),
+                _buildBotonModo(Icons.directions_bike, 'cycling-regular'),
+              ],
             ),
           ),
         ],
