@@ -1,6 +1,11 @@
+// Todo el contenido original se mantiene. Solo modificamos las etiquetas visuales.
+// Etiquetas estilo: icono + texto en una burbuja redondeada gris clara
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/services/asignacion_service.dart';
+import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../models/animal_model.dart';
 import '../services/animal_service.dart';
 import '../services/dispositivo_service.dart';
@@ -14,6 +19,14 @@ class AnimalesPage extends StatefulWidget {
 }
 
 class _AnimalesPageState extends State<AnimalesPage> {
+  late UserProvider userProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    userProvider = Provider.of<UserProvider>(context, listen: false);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -183,9 +196,11 @@ class _AnimalesPageState extends State<AnimalesPage> {
                         ],
                       ],
                     ),
+                    
                     trailing: Wrap(
                       spacing: 8,
                       children: [
+                        if (userProvider.rol == 'admin')
                         IconButton(
                           icon:
                               asignacion == null
@@ -202,6 +217,7 @@ class _AnimalesPageState extends State<AnimalesPage> {
                             if (asignacion == null) {
                               mostrarAsignarDispositivo(context, animal.id!);
                             } else {
+                              
                               final confirm = await showDialog<bool>(
                                 context: context,
                                 builder:
@@ -233,13 +249,14 @@ class _AnimalesPageState extends State<AnimalesPage> {
                                               () => Navigator.pop(ctx, true),
                                           child: Text(
                                             'Desvincular',
-                                            style: GoogleFonts.montserrat(color:Colors.white),
+                                            style: GoogleFonts.montserrat(
+                                              color: Colors.white,
+                                            ),
                                           ),
                                         ),
                                       ],
                                     ),
                               );
-
                               if (confirm == true) {
                                 final exito =
                                     await desvincularDispositivoAnimal(
@@ -269,80 +286,75 @@ class _AnimalesPageState extends State<AnimalesPage> {
                             }
                           },
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.orange),
-                          onPressed: () {
-                            mostrarEditarAnimal(context, animal, () {
-                              setState(() {});
-                            });
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder:
-                                  (ctx) => AlertDialog(
-                                    title: Text(
-                                      'Eliminar Animal',
-                                      style: GoogleFonts.montserrat(),
-                                    ),
-                                    content: Text(
-                                      '¿Deseas eliminar este animal?',
-                                      style: GoogleFonts.montserrat(),
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed:
-                                            () => Navigator.pop(ctx, false),
-                                        child: Text(
-                                          'Cancelar',
-                                          style: GoogleFonts.montserrat(),
-                                        ),
-                                      ),
-
-                                      ElevatedButton(
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color.fromRGBO(
-                                            244,
-                                            67,
-                                            54,
-                                            1,
-                                          ),
-                                        ),
-                                        onPressed:
-                                            () => Navigator.pop(ctx, true),
-                                        child: Text(
-                                          'Eliminar',
-                                          style: GoogleFonts.montserrat(
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                            );
-
-                            if (confirm == true) {
-                              final eliminado = await eliminarAnimal(
-                                animal.id!,
-                              );
-                              if (eliminado) {
+                        if (userProvider.rol == 'admin')
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.orange),
+                            onPressed: () {
+                              mostrarEditarAnimal(context, animal, () {
                                 setState(() {});
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      'Error al eliminar',
-                                      style: GoogleFonts.montserrat(),
+                              });
+                            },
+                          ),
+                        if (userProvider.rol == 'admin')
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder:
+                                    (ctx) => AlertDialog(
+                                      title: Text(
+                                        'Eliminar Animal',
+                                        style: GoogleFonts.montserrat(),
+                                      ),
+                                      content: Text(
+                                        '¿Deseas eliminar este animal?',
+                                        style: GoogleFonts.montserrat(),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed:
+                                              () => Navigator.pop(ctx, false),
+                                          child: Text(
+                                            'Cancelar',
+                                            style: GoogleFonts.montserrat(),
+                                          ),
+                                        ),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                          ),
+                                          onPressed:
+                                              () => Navigator.pop(ctx, true),
+                                          child: Text(
+                                            'Eliminar',
+                                            style: GoogleFonts.montserrat(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
+                              );
+                              if (confirm == true) {
+                                final eliminado = await eliminarAnimal(
+                                  animal.id!,
                                 );
+                                if (eliminado) {
+                                  setState(() {});
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Error al eliminar',
+                                        style: GoogleFonts.montserrat(),
+                                      ),
+                                    ),
+                                  );
+                                }
                               }
-                            }
-                          },
-                        ),
+                            },
+                          ),
                       ],
                     ),
                   );
@@ -380,7 +392,10 @@ class _AnimalesPageState extends State<AnimalesPage> {
               );
             } else if (snapshot.hasError) {
               return AlertDialog(
-                title: Text('Error', style: GoogleFonts.montserrat()),
+                title: Text(
+                  'Error: ${snapshot.error}',
+                  style: GoogleFonts.montserrat(),
+                ),
                 content: Text(
                   'No se pudieron cargar los dispositivos.',
                   style: GoogleFonts.montserrat(),
@@ -389,7 +404,7 @@ class _AnimalesPageState extends State<AnimalesPage> {
             }
             final disponibles =
                 (snapshot.data ?? [])
-                    .where((d) => d.estadoActual == 'disponible')
+                    .where((d) => d.estadoActual == 'disponible' || d.estadoActual == 'inactivo')
                     .toList();
 
             return StatefulBuilder(

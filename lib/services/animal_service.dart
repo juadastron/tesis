@@ -20,7 +20,6 @@ Future<bool> crearAnimal(Animal animal) async {
     headers: {"Content-Type": "application/json"},
     body: jsonEncode(animal.toJson()),
   );
-  print('📨 RESPUETA CREAR: ${response.body}');
 
   final resultado = jsonDecode(response.body);
   return resultado["success"] == true;
@@ -32,7 +31,6 @@ Future<bool> actualizarAnimal(Animal animal) async {
     headers: {"Content-Type": "application/json"},
     body: jsonEncode(animal.toJson(incluirId: true)),
   );
-  print('📨 RESPUETA ACTUALIZAR: ${response.body}');
 
   final resultado = jsonDecode(response.body);
   return resultado["success"] == true;

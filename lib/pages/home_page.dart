@@ -30,14 +30,12 @@ class HomePage extends StatelessWidget {
           'route': '/usuarios',
           'color': const Color.fromRGBO(33, 150, 243, 1), // Azul
         },
-      if (userRole == 'admin')
         {
           'icon': FontAwesomeIcons.paw,
           'text': 'Animales',
           'route': '/animales',
           'color': const Color(0xFF6A1B9A), // Morado
         },
-      if (userRole == 'admin')
         {
           'icon': FontAwesomeIcons.microchip,
           'text': 'Collares',

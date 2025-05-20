@@ -21,7 +21,7 @@ class ConfiguracionMqttService {
       "umbral_inactividad_min": config.umbralInactividadMin,
     };
 
-    print("📤 Enviando configuración MQTT: ${jsonEncode(payload)}");
+   // print("📤 Enviando configuración MQTT: ${jsonEncode(payload)}");
 
     final response = await http.post(
       Uri.parse(mqttApiUrl),
@@ -29,8 +29,8 @@ class ConfiguracionMqttService {
       body: jsonEncode(payload),
     );
 
-    print("📥 Respuesta del servidor: ${response.statusCode}");
-    print("📦 BODY: ${response.body}");
+    //print("📥 Respuesta del servidor: ${response.statusCode}");
+   // print("📦 BODY: ${response.body}");
 
     if (response.statusCode != 200) {
       throw Exception("❌ Error al publicar configuración: ${response.body}");

@@ -1,12 +1,42 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_application_1/core/config.dart';
+
 
 class NotificacionesService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-
+  static const String apiUrl = '${baseUrl}usuarios.php';
   // El navigatorKey debe pasarse desde main.dart
   static late GlobalKey<NavigatorState> navigatorKey;
+
+  static Future<void> guardarTokenFCMEnBackend(int idUsuario) async {
+    try {
+      final token = await _messaging.getToken();
+
+      if (token == null) {
+        print("❌ Token FCM es null");
+        return;
+      }
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'id_usuario': idUsuario, 'token_fcm': token}),
+      );
+
+      if (response.statusCode == 200) {
+        print("✅ Token FCM guardado en backend");
+      } else {
+        print("❌ Error al guardar token FCM en backend: ${response.body}");
+      }
+    } catch (e) {
+      print("❌ Excepción al guardar token FCM: $e");
+    }
+  }
 
   /// Inicializa Firebase Messaging
   static Future<void> initializeFCM() async {

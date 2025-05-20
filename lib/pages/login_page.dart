@@ -19,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   String email = '';
   String password = '';
   bool _obscureText = true;
+  String rol = '';
 
   @override
   Widget build(BuildContext context) {
