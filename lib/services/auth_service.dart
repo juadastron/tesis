@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
-import '../models/usuario_model.dart';
 
 Future<bool> loginUsuario(
   BuildContext context,

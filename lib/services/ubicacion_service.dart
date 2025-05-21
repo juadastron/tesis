@@ -6,6 +6,7 @@ Future<List<Map<String, dynamic>>> obtenerDispositivosAsignados() async {
   final response = await http.get(Uri.parse('${baseUrl}ubicaciones.php'));
 
   if (response.statusCode == 200) {
+    print('Respuesta cruda del servidor: ${response.body}');
     final data = jsonDecode(response.body);
     final estadosValidos = ['asignado', 'peligro', 'inactividad'];
 
@@ -21,4 +22,18 @@ Future<List<Map<String, dynamic>>> obtenerDispositivosAsignados() async {
   } else {
     throw Exception('Error HTTP: ${response.statusCode}');
   }
+}
+
+Future<List<Map<String, dynamic>>> obtenerRecorridoUltimoDia(String idDispositivo) async {
+  final response = await http.get(
+    Uri.parse('${baseUrl}ubicaciones.php?id_dispositivo=$idDispositivo&recorrido=1'),
+  );
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    if (data['success']) {
+      return List<Map<String, dynamic>>.from(data['recorrido']);
+    }
+  }
+  throw Exception('Error al obtener recorrido');
 }

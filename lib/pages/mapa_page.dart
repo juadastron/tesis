@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/models/dispositivo_model.dart';
+import 'package:flutter_application_1/services/ubicacion_service.dart'
+    as UbicacionService;
+import 'package:flutter_application_1/utils/notificador.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../services/ubicacion_service.dart';
 import '../services/direccion_service.dart';
@@ -6,6 +10,7 @@ import 'package:location/location.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
+import '../utils/distancia.dart';
 
 BitmapDescriptor? _iconoPatita;
 
@@ -17,6 +22,7 @@ class MapaPage extends StatefulWidget {
 }
 
 class _MapaPageState extends State<MapaPage> {
+  double? _ultimaDistanciaKm;
   GoogleMapController? _mapController;
   Set<Marker> _marcadores = {};
   Set<Polyline> _polilineas = {};
@@ -44,6 +50,7 @@ class _MapaPageState extends State<MapaPage> {
   }
 
   Future<void> _cargarDispositivos() async {
+    print('Dispositivos cargados: $_dispositivos');
     try {
       final dispositivosAsignados = await obtenerDispositivosAsignados();
       setState(() {
@@ -81,6 +88,23 @@ class _MapaPageState extends State<MapaPage> {
     );
   }
 
+  LatLngBounds _boundsFromLatLngList(List<LatLng> puntos) {
+    final latitudes = puntos.map((p) => p.latitude);
+    final longitudes = puntos.map((p) => p.longitude);
+
+    final southwest = LatLng(
+      latitudes.reduce((a, b) => a < b ? a : b),
+      longitudes.reduce((a, b) => a < b ? a : b),
+    );
+
+    final northeast = LatLng(
+      latitudes.reduce((a, b) => a > b ? a : b),
+      longitudes.reduce((a, b) => a > b ? a : b),
+    );
+
+    return LatLngBounds(southwest: southwest, northeast: northeast);
+  }
+
   Future<void> _mostrarRuta(LatLng destino) async {
     final location = Location();
     final ubicacion = await location.getLocation();
@@ -90,7 +114,18 @@ class _MapaPageState extends State<MapaPage> {
       destino,
       _modoSeleccionado,
     );
-
+    final distanciaTotal = calcularDistanciaTotal(ruta);
+    // 🟪 Guardar en variable para mostrar como etiqueta flotante
+    setState(() {
+      _ultimaDistanciaKm = distanciaTotal;
+    });
+    final puntoMedio = ruta[ruta.length ~/ 2];
+    final marcadorDistancia = Marker(
+      markerId: const MarkerId('distancia_km'),
+      position: puntoMedio,
+      infoWindow: InfoWindow(title: '${distanciaTotal.toStringAsFixed(2)} km'),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+    );
     // 🔵 Crea marcador de tu ubicación
     final marcadorUbicacion = Marker(
       markerId: const MarkerId('mi_ubicacion'),
@@ -112,7 +147,7 @@ class _MapaPageState extends State<MapaPage> {
       };
 
       // Agrega el marcador de ubicación a la lista
-      _marcadores.add(_miUbicacion!);
+      _marcadores.addAll([_miUbicacion!, marcadorDistancia]);
     });
 
     _mapController?.animateCamera(CameraUpdate.newLatLngZoom(origen, 15));
@@ -161,9 +196,10 @@ class _MapaPageState extends State<MapaPage> {
             },
           ),
           SafeArea(
-            child: Padding(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     decoration: BoxDecoration(
@@ -187,7 +223,7 @@ class _MapaPageState extends State<MapaPage> {
                         value: _dispositivoSeleccionado,
                         isExpanded: true,
                         hint: Text(
-                          'Seleccionar dispositivo',
+                          'Seleccionar animal a localizar',
                           style: GoogleFonts.montserrat(
                             color: Colors.grey[700],
                           ),
@@ -212,6 +248,7 @@ class _MapaPageState extends State<MapaPage> {
                         onChanged: (value) {
                           setState(() {
                             _dispositivoSeleccionado = value;
+                            _ultimaDistanciaKm = null;
                           });
                           if (value != null) _centrarEnDispositivo(value);
                         },
@@ -231,11 +268,78 @@ class _MapaPageState extends State<MapaPage> {
                         final lng = dispositivo['longitud'];
                         _mostrarRuta(LatLng(lat, lng));
                       }
+                      if (_dispositivoSeleccionado == null) {
+                        Notificador.mostrar(
+                          context: context,
+                          mensaje: "Debes seleccionar un animal primero",
+                          tipo: TipoNotificacion.alerta,
+                        );
+                      }
                     },
                     icon: const Icon(Icons.alt_route),
                     label: Text('Cargar ruta', style: GoogleFonts.montserrat()),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6A1B9A),
+                      backgroundColor: const Color(0xFF6A1B9A), // 💜 morado
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      _ultimaDistanciaKm = null;
+                      if (_dispositivoSeleccionado != null) {
+                        final recorrido =
+                            await UbicacionService.obtenerRecorridoUltimoDia(
+                              _dispositivoSeleccionado!,
+                            );
+
+                        for (var punto in recorrido) {
+                          print(
+                            '⏱️ ${punto['timestamp']} → 📍 ${punto['latitud']}, ${punto['longitud']}',
+                          );
+                        }
+                        final puntos =
+                            recorrido
+                                .map((u) => LatLng(u['latitud'], u['longitud']))
+                                .toList();
+
+                        setState(() {
+                          _polilineas = {
+                            Polyline(
+                              polylineId: const PolylineId('recorrido'),
+                              points: puntos,
+                              color: Colors.orange,
+                              width: 4,
+                            ),
+                          };
+                        });
+
+                        if (puntos.isNotEmpty) {
+                          _mapController?.animateCamera(
+                            CameraUpdate.newLatLngBounds(
+                              _boundsFromLatLngList(puntos),
+                              60,
+                            ),
+                          );
+                        }
+                      }
+                      if (_dispositivoSeleccionado == null) {
+                        Notificador.mostrar(
+                          context: context,
+                          mensaje: "Debes seleccionar un animal primero",
+                          tipo: TipoNotificacion.alerta,
+                        );
+                      }
+                    },
+                    icon: const Icon(Icons.timeline),
+                    label: Text(
+                      'Recorrido ultimas 24H',
+                      style: GoogleFonts.montserrat(),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -262,6 +366,28 @@ class _MapaPageState extends State<MapaPage> {
               ],
             ),
           ),
+          if (_ultimaDistanciaKm != null)
+            Positioned(
+              bottom: 150,
+              left: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: const [
+                    BoxShadow(color: Colors.black26, blurRadius: 4),
+                  ],
+                ),
+                child: Text(
+                  '${_ultimaDistanciaKm!.toStringAsFixed(2)} km',
+                  style: GoogleFonts.montserrat(color: Colors.white),
+                ),
+              ),
+            ),
         ],
       ),
     );

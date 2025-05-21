@@ -17,9 +17,13 @@ Future<List<Dispositivo>> obtenerDispositivos() async {
   }
 }
 
-Future<Dispositivo?> crearDispositivo(Dispositivo dispositivo, int idUsuario) async {
+Future<Dispositivo?> crearDispositivo(
+  Dispositivo dispositivo,
+  int idUsuario,
+) async {
   final body = dispositivo.toJson();
-  body["id_usuario"] = idUsuario; // ✅ Lo agregamos al JSON
+  body["id_usuario"] =
+      idUsuario.toString(); // Conversión segura
 
   final response = await http.post(
     Uri.parse('${baseUrl}dispositivos.php'),
@@ -69,7 +73,10 @@ Future<bool> eliminarDispositivo(int idDispositivo) async {
 }
 
 // ✅ NUEVO: Crear y configurar automáticamente
-Future<Dispositivo?> crearDispositivoYConfigurar(Dispositivo dispositivo, int idUsuario) async {
+Future<Dispositivo?> crearDispositivoYConfigurar(
+  Dispositivo dispositivo,
+  int idUsuario,
+) async {
   final nuevo = await crearDispositivo(dispositivo, idUsuario);
   if (nuevo == null) return null;
 
@@ -93,4 +100,3 @@ Future<Dispositivo?> crearDispositivoYConfigurar(Dispositivo dispositivo, int id
   await ConfiguracionMqttService().enviarConfiguracion(config);
   return nuevo;
 }
-

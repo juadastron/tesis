@@ -66,6 +66,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const DispositivosPage());
           case '/mapa':
             return MaterialPageRoute(builder: (_) => const MapaPage());
+          case '/Historico de collares':
+            return MaterialPageRoute(builder: (_) => const MapaPage());
           case '/configuracion':
             final args = settings.arguments as Map<String, dynamic>?;
             return MaterialPageRoute(
