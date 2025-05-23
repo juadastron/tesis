@@ -30,29 +30,17 @@ class HomePage extends StatelessWidget {
           'route': '/usuarios',
           'color': const Color.fromRGBO(33, 150, 243, 1), // Azul
         },
-        {
-          'icon': FontAwesomeIcons.paw,
-          'text': 'Animales',
-          'route': '/animales',
-          'color': const Color(0xFF6A1B9A), // Morado
-        },
-        {
-          'icon': FontAwesomeIcons.microchip,
-          'text': 'Collares',
-          'route': '/dispositivos',
-          'color': Colors.blue, // Azul
-        },
       {
-        'icon': FontAwesomeIcons.info,
-        'text': 'Quienes somos?',
-        'route': '/mapa',
+        'icon': FontAwesomeIcons.paw,
+        'text': 'Animales',
+        'route': '/animales',
         'color': const Color(0xFF6A1B9A), // Morado
       },
       {
-        'icon': FontAwesomeIcons.info,
-        'text': 'como ayudar?',
-        'route': '/mapa',
-        'color': const Color(0xFF6A1B9A), // Morado
+        'icon': FontAwesomeIcons.microchip,
+        'text': 'Collares',
+        'route': '/dispositivos',
+        'color': Colors.blue, // Azul
       },
     ];
 
@@ -182,7 +170,6 @@ class HomePage extends StatelessWidget {
           }
 
           final animales = snapshot.data ?? [];
-
           return Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(

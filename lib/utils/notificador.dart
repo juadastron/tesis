@@ -71,7 +71,7 @@ class Notificador {
 
     overlay.insert(overlayEntry);
 
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    Future.delayed(const Duration(milliseconds: 3500), () {
       overlayEntry.remove();
     });
   }
