@@ -28,14 +28,13 @@ Future<bool> desvincularDispositivoAnimal(int idAsignacion) async {
   return data["success"] == true;
 }
 
-
 Future<Map<String, dynamic>?> obtenerAsignacionAnimal(int idAnimal) async {
   final response = await http.get(Uri.parse('${baseUrl}asignaciones.php?id_animal=$idAnimal'));
 
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
-    if (data != null && data.isNotEmpty) {
-      return data;
+    if (data["success"] == true && data["asignaciones"] != null) {
+      return data["asignaciones"];
     }
   }
   return null;

@@ -41,8 +41,8 @@ dependencies:
   flutter_polyline_points: ^2.1.0
   location: ^5.0.0
   image_picker: ^1.0.4
-  firebase_core: ^2.24.2
-  firebase_messaging: ^14.7.4
+  firebase_core: ^2.30.0
+  firebase_messaging: ^14.7.10
   shared_preferences: ^2.2.2
   intl: ^0.18.1
 

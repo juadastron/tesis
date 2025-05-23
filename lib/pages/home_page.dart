@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/models/usuario_model.dart';
-import 'package:flutter_application_1/utils/notificador.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -42,12 +41,6 @@ class HomePage extends StatelessWidget {
         'text': 'Collares',
         'route': '/dispositivos',
         'color': Colors.blue, // Azul
-      },
-      {
-        'icon': FontAwesomeIcons.clockRotateLeft,
-        'text': 'Historico de collares',
-        'route': '/historialCollares',
-        'color': const Color(0xFF6A1B9A), // Morado
       },
     ];
 

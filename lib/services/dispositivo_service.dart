@@ -46,6 +46,19 @@ Future<Dispositivo?> crearDispositivo(
   return null;
 }
 
+Future<List<Dispositivo>> obtenerDispositivosDisponibles() async {
+  final response = await http.get(
+    Uri.parse('${baseUrl}dispositivos.php?disponibles=1'),
+  );
+
+  if (response.statusCode == 200) {
+    final List<dynamic> data = jsonDecode(response.body);
+    return data.map((e) => Dispositivo.fromJson(e)).toList();
+  } else {
+    throw Exception("Error al cargar dispositivos disponibles");
+  }
+}
+
 Future<bool> actualizarDispositivo(Dispositivo dispositivo) async {
   final response = await http.put(
     Uri.parse('${baseUrl}dispositivos.php'),
@@ -53,8 +66,19 @@ Future<bool> actualizarDispositivo(Dispositivo dispositivo) async {
     body: jsonEncode(dispositivo.toJson(incluirId: true)),
   );
 
-  final data = jsonDecode(response.body);
-  return data["success"] == true;
+  if (response.body.isEmpty) {
+    print("⚠️ Respuesta vacía del servidor");
+    return false;
+  }
+
+  try {
+    final data = jsonDecode(response.body);
+    return data["success"] == true;
+  } catch (e) {
+    print("❌ Error al decodificar JSON: $e");
+    print("Contenido recibido: ${response.body}");
+    return false;
+  }
 }
 
 Future<bool> eliminarDispositivo(int idDispositivo) async {

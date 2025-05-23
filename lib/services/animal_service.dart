@@ -1,16 +1,24 @@
 import 'dart:convert';
+import 'package:flutter_application_1/main.dart';
+import 'package:flutter_application_1/utils/notificador.dart';
 import 'package:http/http.dart' as http;
 import '../core/config.dart';
 import '../models/animal_model.dart';
 
 Future<List<Animal>> obtenerAnimales() async {
-  final response = await http.get(Uri.parse("${baseUrl}animales.php"));
+  try {
+    final response = await http.get(Uri.parse('$baseUrl/animales.php'));
 
-  if (response.statusCode == 200) {
-    final List<dynamic> data = jsonDecode(response.body);
-    return data.map((e) => Animal.fromJson(e)).toList();
-  } else {
-    throw Exception('Error al cargar animales');
+    if (response.statusCode == 200) {
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map((e) => Animal.fromJson(e)).toList();
+    } else {
+      print("Error HTTP: ${response.statusCode}");
+      return [];
+    }
+  } catch (e) {
+    print("Excepción en obtenerAnimales(): $e");
+    return [];
   }
 }
 
@@ -38,11 +46,19 @@ Future<bool> actualizarAnimal(Animal animal) async {
 
 Future<bool> eliminarAnimal(int id) async {
   final response = await http.delete(
-    Uri.parse("${baseUrl}animales.php"),
-    headers: {"Content-Type": "application/x-www-form-urlencoded"},
-    body: "id_animal=$id",
+    Uri.parse('$baseUrl/animales.php?id_animal=$id'),
   );
 
+  if (response.body.isEmpty) {
+    print("error vacio del server");
+    return false;
+  }
+
   final resultado = jsonDecode(response.body);
-  return resultado["success"] == true;
+
+  if (!resultado['success']) {
+    print("error"+resultado);
+  }
+
+  return resultado['success'] == true;
 }

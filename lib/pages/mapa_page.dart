@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/models/dispositivo_model.dart';
 import 'package:flutter_application_1/services/ubicacion_service.dart'
     as UbicacionService;
 import 'package:flutter_application_1/utils/notificador.dart';

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import '../models/asignacion_model.dart';
 import '../services/asignacion_service.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -39,7 +38,6 @@ void mostrarHistorialAsignacionesDialog(
               }
 
               final historial = snapshot.data!;
-              final formatter = DateFormat('yyyy-MM-dd HH:mm');
 
               return Container(
                 width: 350,

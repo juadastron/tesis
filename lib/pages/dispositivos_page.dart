@@ -2,13 +2,14 @@
 // Etiquetas estilo: icono + texto en una burbuja redondeada gris clara
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:flutter_application_1/utils/notificador.dart';
+import 'package:flutter_application_1/utils/permiso_utils.dart';
 import 'package:flutter_application_1/utils/validadores.dart';
 import 'package:flutter_application_1/widgets/historial_dialog.dart';
+import 'package:flutter_application_1/widgets/solo_admin.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import '../models/dispositivo_model.dart';
 import '../services/dispositivo_service.dart';
@@ -155,233 +156,78 @@ class _DispositivosPageState extends State<DispositivosPage> {
                                 ),
                             ],
                           ),
-                          trailing: Wrap(
-                            spacing: 4, // espacio entre íconos
-                            children: [
-                              FutureBuilder<bool>(
-                                future: PermisosService.verificarPermisoEdicion(
-                                  userProvider.idUsuario!,
-                                  dispositivo.id!,
+                          trailing: SoloAdmin(
+                            child: Table(
+                              defaultColumnWidth: const FixedColumnWidth(40),
+                              children: [
+                                TableRow(
+                                  children: [
+                                    _botonAccion(
+                                      icono: Icons.settings,
+                                      color: Colors.deepPurple,
+                                      onTap: () {
+                                        Navigator.pushNamed(
+                                          context,
+                                          '/configuracion',
+                                          arguments: {
+                                            'idDispositivo': dispositivo.id,
+                                          },
+                                        );
+                                      },
+                                    ),
+                                    _botonAccion(
+                                      icono: Icons.history,
+                                      color: Colors.blueGrey,
+                                      onTap: () {
+                                        mostrarHistorialAsignacionesDialog(
+                                          context,
+                                          dispositivo.id!,
+                                        );
+                                      },
+                                    ),
+                                  ],
                                 ),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState !=
-                                      ConnectionState.done) {
-                                    return const SizedBox.shrink(); // mientras carga
-                                  }
-
-                                  if (snapshot.hasData &&
-                                      snapshot.data == true) {
-                                    return Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.settings,
-                                                color: Colors.deepPurple,
-                                              ),
-                                              tooltip: 'Configurar',
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              onPressed: () {
-                                                Navigator.pushNamed(
-                                                  context,
-                                                  '/configuracion',
-                                                  arguments: {
-                                                    'idDispositivo':
-                                                        dispositivo.id,
-                                                  },
-                                                );
-                                              },
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.history,
-                                                color: Colors.blueGrey,
-                                              ),
-                                              tooltip:
-                                                  "Historial de asignaciones",
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              onPressed: () {
-                                                mostrarHistorialAsignacionesDialog(
-                                                  context,
+                                TableRow(
+                                  children: [
+                                    _botonAccion(
+                                      icono: Icons.edit,
+                                      color: Colors.orange,
+                                      onTap: () {
+                                        mostrarEditarDispositivo(
+                                          context,
+                                          dispositivo,
+                                          cargarDispositivos,
+                                        );
+                                      },
+                                    ),
+                                    _botonAccion(
+                                      icono: Icons.delete,
+                                      color: Colors.red,
+                                      onTap: () async {
+                                        if (dispositivo.estadoActual !=
+                                            'disponible') {
+                                          await _mostrarDialogoNoEliminable(
+                                            context,
+                                          );
+                                        } else {
+                                          final confirmar =
+                                              await _mostrarDialogoConfirmarEliminar(
+                                                context,
+                                              );
+                                          if (confirmar == true) {
+                                            final ok =
+                                                await eliminarDispositivo(
                                                   dispositivo.id!,
                                                 );
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.edit,
-                                                color: Colors.orange,
-                                              ),
-                                              tooltip: 'Editar',
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              onPressed: () {
-                                                mostrarEditarDispositivo(
-                                                  context,
-                                                  dispositivo,
-                                                  () {
-                                                    cargarDispositivos();
-                                                  },
-                                                );
-                                              },
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.delete,
-                                                color: Colors.red,
-                                              ),
-                                              tooltip: 'Eliminar',
-                                              visualDensity:
-                                                  VisualDensity.compact,
-                                              onPressed: () async {
-                                                if (dispositivo.estadoActual !=
-                                                    'disponible') {
-                                                  await showDialog(
-                                                    context: context,
-                                                    builder:
-                                                        (ctx) => AlertDialog(
-                                                          shape: RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius.circular(
-                                                                  20,
-                                                                ),
-                                                          ),
-                                                          title: const Text(
-                                                            'No se puede eliminar',
-                                                          ),
-                                                          content: const Text(
-                                                            'Este dispositivo está asignado a un animal.\n\nDebes desvincularlo primero antes de eliminarlo.',
-                                                          ),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed:
-                                                                  () =>
-                                                                      Navigator.pop(
-                                                                        ctx,
-                                                                      ),
-                                                              child: const Text(
-                                                                'Cancelar',
-                                                              ),
-                                                            ),
-                                                            ElevatedButton(
-                                                              onPressed: () {
-                                                                Navigator.pop(
-                                                                  ctx,
-                                                                );
-                                                                Navigator.pushNamed(
-                                                                  context,
-                                                                  '/animales',
-                                                                );
-                                                              },
-                                                              style: ElevatedButton.styleFrom(
-                                                                backgroundColor:
-                                                                    const Color(
-                                                                      0xFF6A1B9A,
-                                                                    ),
-                                                              ),
-                                                              child: const Text(
-                                                                'Ir a Animales',
-                                                                style: TextStyle(
-                                                                  color:
-                                                                      Colors
-                                                                          .white,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                  );
-                                                } else {
-                                                  final confirmar = await showDialog<
-                                                    bool
-                                                  >(
-                                                    context: context,
-                                                    builder:
-                                                        (ctx) => AlertDialog(
-                                                          title: const Text(
-                                                            '¿Confirmar eliminación?',
-                                                          ),
-                                                          content: const Text(
-                                                            '¿Estás seguro de que deseas eliminar este dispositivo?',
-                                                          ),
-                                                          actions: [
-                                                            TextButton(
-                                                              onPressed:
-                                                                  () =>
-                                                                      Navigator.pop(
-                                                                        ctx,
-                                                                        false,
-                                                                      ),
-                                                              child: const Text(
-                                                                'Cancelar',
-                                                              ),
-                                                            ),
-                                                            ElevatedButton(
-                                                              style: ElevatedButton.styleFrom(
-                                                                backgroundColor:
-                                                                    Colors.red,
-                                                              ),
-                                                              onPressed:
-                                                                  () =>
-                                                                      Navigator.pop(
-                                                                        ctx,
-                                                                        true,
-                                                                      ),
-                                                              child: const Text(
-                                                                'Eliminar',
-                                                                style: TextStyle(
-                                                                  color:
-                                                                      Colors
-                                                                          .white,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                  );
-
-                                                  if (confirmar == true) {
-                                                    final ok =
-                                                        await eliminarDispositivo(
-                                                          dispositivo.id!,
-                                                        );
-                                                    if (ok)
-                                                      cargarDispositivos();
-                                                    FocusScope.of(
-                                                      context,
-                                                    ).unfocus();
-                                                    Notificador.mostrar(
-                                                      context: context,
-                                                      mensaje:
-                                                          "Dispositivo eliminado",
-                                                      tipo:
-                                                          TipoNotificacion
-                                                              .success,
-                                                    );
-                                                  }
-                                                }
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    );
-                                  }
-
-                                  return const SizedBox.shrink(); // si no tiene permisos
-                                },
-                              ),
-                            ],
+                                            if (ok) cargarDispositivos();
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         );
                       },
@@ -389,18 +235,95 @@ class _DispositivosPageState extends State<DispositivosPage> {
           ),
         ],
       ),
-      floatingActionButton:
-          userProvider.rol == 'admin'
-              ? FloatingActionButton(
-                backgroundColor: const Color(0xFF6A1B9A),
+      floatingActionButton: SoloAdmin(
+        child: FloatingActionButton(
+          backgroundColor: const Color(0xFF6A1B9A),
+          onPressed: () {
+            mostrarCrearDispositivo(context, cargarDispositivos);
+          },
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Widget _botonAccion({
+    required IconData icono,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icono, color: color, size: 20),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _mostrarDialogoNoEliminable(BuildContext context) async {
+    await showDialog(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: const Text('No se puede eliminar'),
+            content: const Text(
+              'Este dispositivo está asignado a un animal. Debes desvincularlo primero antes de eliminarlo.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF6A1B9A),
+                ),
                 onPressed: () {
-                  mostrarCrearDispositivo(context, () {
-                    cargarDispositivos();
-                  });
+                  Navigator.pop(ctx);
+                  Navigator.pushNamed(context, '/animales');
                 },
-                child: const Icon(Icons.add, color: Colors.white),
-              )
-              : null,
+                child: const Text(
+                  'Ir a Animales',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+    );
+  }
+
+  Future<bool?> _mostrarDialogoConfirmarEliminar(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder:
+          (ctx) => AlertDialog(
+            title: const Text('¿Confirmar eliminación?'),
+            content: const Text(
+              '¿Estás seguro de que deseas eliminar este dispositivo?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar'),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text(
+                  'Eliminar',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
     );
   }
 
@@ -467,7 +390,7 @@ class _DispositivosPageState extends State<DispositivosPage> {
   void mostrarCrearDispositivo(BuildContext context, VoidCallback onCrear) {
     final formKey = GlobalKey<FormState>();
 
-    if (userProvider.rol != 'admin') {
+    if (!PermisoUtils.esAdmin(context)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("❌ No tienes permisos para agregar dispositivos."),
@@ -504,20 +427,23 @@ class _DispositivosPageState extends State<DispositivosPage> {
                     ),
                     const SizedBox(height: 20),
                     campoBurbuja(
-                      label: "Número de celular",
+                      context: ctx,
+                      label: "Número",
                       controller: numeroCelularController,
                       icon: Icons.phone_android,
-                      keyboardType: TextInputType.phone,
                       validator: validarNumeroCelularEcuador,
                       colorIndex: 0,
+                      maxLength: 11,
                     ),
+                    const SizedBox(height: 20),
                     campoBurbuja(
+                      context: ctx,
                       label: "IMEI",
                       controller: imeiController,
                       icon: Icons.confirmation_number,
-                      keyboardType: TextInputType.number,
                       validator: validarIMEI,
                       colorIndex: 1,
+                      maxLength: 15,
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -635,19 +561,23 @@ class _DispositivosPageState extends State<DispositivosPage> {
                     ),
                     const SizedBox(height: 20),
                     campoBurbuja(
+                      context: ctx,
                       label: "Número",
                       controller: numeroCelularController,
                       icon: Icons.phone_android,
                       validator: validarNumeroCelularEcuador,
                       colorIndex: 0,
+                      maxLength: 11,
                     ),
                     const SizedBox(height: 20),
                     campoBurbuja(
+                      context: ctx,
                       label: "IMEI",
                       controller: imeiController,
                       icon: Icons.confirmation_number,
                       validator: validarIMEI,
                       colorIndex: 1,
+                      maxLength: 15,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -728,16 +658,19 @@ class _DispositivosPageState extends State<DispositivosPage> {
   }
 
   Widget campoBurbuja({
+    required BuildContext context,
     required String label,
     required TextEditingController controller,
     required IconData icon,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
-    int colorIndex = 0, // <- índice para alternar colores
+    int colorIndex = 0,
+    int maxLength = 50, // <-- parámetro opcional agregado
   }) {
     final List<Color> colores = [
-      const Color.fromRGBO(33, 150, 243, 1), // Azul
-      const Color(0xFF6A1B9A), // Morado
+      const Color.fromRGBO(33, 150, 243, 1),
+      const Color(0xFF6A1B9A),
+      const Color.fromARGB(255, 214, 211, 151),
     ];
     final iconColor = colores[colorIndex % colores.length];
 
@@ -755,12 +688,24 @@ class _DispositivosPageState extends State<DispositivosPage> {
         controller: controller,
         validator: validator,
         keyboardType: keyboardType,
+        inputFormatters: [LengthLimitingTextInputFormatter(maxLength)],
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: iconColor),
           border: InputBorder.none,
           labelStyle: GoogleFonts.montserrat(),
+          counterText: '', // <-- Oculta el contador por defecto
         ),
+        onChanged: (value) {
+          if (value.length == maxLength) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Máximo 7 caracteres permitidos'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          }
+        },
       ),
     );
   }

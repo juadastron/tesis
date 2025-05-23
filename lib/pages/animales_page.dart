@@ -2,9 +2,12 @@
 // Etiquetas estilo: icono + texto en una burbuja redondeada gris clara
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application_1/services/asignacion_service.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:flutter_application_1/utils/notificador.dart';
+import 'package:flutter_application_1/utils/permiso_utils.dart';
+import 'package:flutter_application_1/widgets/solo_admin.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/animal_model.dart';
@@ -12,6 +15,7 @@ import '../services/animal_service.dart';
 import '../services/dispositivo_service.dart';
 import '../models/dispositivo_model.dart';
 import '../utils/validadores.dart';
+import 'package:flutter/services.dart';
 
 class AnimalesPage extends StatefulWidget {
   const AnimalesPage({super.key});
@@ -45,7 +49,7 @@ class _AnimalesPageState extends State<AnimalesPage> {
           } else if (snapshot.hasError) {
             return Center(
               child: Text(
-                'Error: \${snapshot.error}',
+                'Error: ${snapshot.error}',
                 style: GoogleFonts.montserrat(),
               ),
             );
@@ -125,7 +129,9 @@ class _AnimalesPageState extends State<AnimalesPage> {
                             ),
                           ],
                         ),
-                        if (asignacion != null) ...[
+                        if (asignacion != null &&
+                            asignacion["imei"] != null &&
+                            asignacion["fecha_inicio"] != null) ...[
                           const SizedBox(height: 4),
                           Text(
                             'Collar:',
@@ -198,99 +204,127 @@ class _AnimalesPageState extends State<AnimalesPage> {
                         ],
                       ],
                     ),
+                    trailing: SoloAdmin(
+                      child: Wrap(
+                        spacing: 8,
+                        children: [
+                          Builder(
+                            builder: (context) {
+                              final tieneAsignacionValida =
+                                  asignacion != null &&
+                                  asignacion["imei"] != null &&
+                                  asignacion["fecha_inicio"] != null;
 
-                    trailing: Wrap(
-                      spacing: 8,
-                      children: [
-                        if (userProvider.rol == 'admin')
-                          IconButton(
-                            icon:
-                                asignacion == null
-                                    ? const Icon(
-                                      Icons.link,
-                                      color: Colors.green,
-                                    )
-                                    : const Icon(
-                                      Icons.link_off,
-                                      color: Colors.redAccent,
-                                    ),
-                            tooltip:
-                                asignacion == null
-                                    ? 'Asignar dispositivo'
-                                    : 'Desvincular dispositivo',
-                            onPressed: () async {
-                              if (asignacion == null) {
-                                mostrarAsignarDispositivo(context, animal.id!);
-                              } else {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder:
-                                      (ctx) => AlertDialog(
-                                        title: Text(
-                                          'Desvincular Collar',
-                                          style: GoogleFonts.montserrat(),
+                              return IconButton(
+                                icon:
+                                    !tieneAsignacionValida
+                                        ? const Icon(
+                                          Icons.link,
+                                          color: Colors.green,
+                                        )
+                                        : const Icon(
+                                          Icons.link_off,
+                                          color: Colors.redAccent,
                                         ),
-                                        content: Text(
-                                          '¿Deseas desvincular el dispositivo de este animal?',
-                                          style: GoogleFonts.montserrat(),
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed:
-                                                () => Navigator.pop(ctx, false),
-                                            child: Text(
-                                              'Cancelar',
-                                              style: GoogleFonts.montserrat(),
-                                            ),
-                                          ),
-                                          ElevatedButton(
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(
-                                                0xFF6A1B9A,
-                                              ),
-                                            ),
-                                            onPressed:
-                                                () => Navigator.pop(ctx, true),
-                                            child: Text(
-                                              'Desvincular',
-                                              style: GoogleFonts.montserrat(
-                                                color: Colors.white,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                );
-                                if (confirm == true) {
-                                  final exito =
-                                      await desvincularDispositivoAnimal(
-                                        asignacion["id_asignacion"],
-                                      );
-                                  if (exito) {
-                                    setState(() {});
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Collar desvinculado correctamente',
-                                          style: GoogleFonts.montserrat(),
-                                        ),
-                                      ),
+                                tooltip:
+                                    !tieneAsignacionValida
+                                        ? 'Asignar dispositivo'
+                                        : 'Desvincular dispositivo',
+                                onPressed: () async {
+                                  if (!tieneAsignacionValida) {
+                                    mostrarAsignarDispositivo(
+                                      context,
+                                      animal.id!,
+                                      () {
+                                        setState(
+                                          () {},
+                                        ); // 👈 Esto fuerza a que se reconstruyan los FutureBuilder
+                                      },
                                     );
                                   } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Error al desvincular',
-                                          style: GoogleFonts.montserrat(),
-                                        ),
-                                      ),
+                                    final confirm = await showDialog<bool>(
+                                      context: context,
+                                      builder:
+                                          (ctx) => AlertDialog(
+                                            title: Text(
+                                              'Desvincular Collar',
+                                              style: GoogleFonts.montserrat(),
+                                            ),
+                                            content: Text(
+                                              '¿Deseas desvincular el dispositivo de este animal?',
+                                              style: GoogleFonts.montserrat(),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed:
+                                                    () => Navigator.pop(
+                                                      ctx,
+                                                      false,
+                                                    ),
+                                                child: Text(
+                                                  'Cancelar',
+                                                  style:
+                                                      GoogleFonts.montserrat(),
+                                                ),
+                                              ),
+                                              ElevatedButton(
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: const Color(
+                                                    0xFF6A1B9A,
+                                                  ),
+                                                ),
+                                                onPressed:
+                                                    () => Navigator.pop(
+                                                      ctx,
+                                                      true,
+                                                    ),
+                                                child: Text(
+                                                  'Desvincular',
+                                                  style: GoogleFonts.montserrat(
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
                                     );
+                                    if (confirm == true) {
+                                      final idAsignacion =
+                                          asignacion["id_asignacion"];
+                                      if (idAsignacion == null) {
+                                        Notificador.mostrar(
+                                          context: context,
+                                          mensaje:
+                                              "Este collar no tiene asignación activa",
+                                          tipo: TipoNotificacion.error,
+                                        );
+                                        return;
+                                      }
+                                      final exito =
+                                          await desvincularDispositivoAnimal(
+                                            idAsignacion,
+                                          );
+                                      if (exito) {
+                                        setState(() {});
+                                        Notificador.mostrar(
+                                          context: context,
+                                          mensaje:
+                                              "Dispositivo desviculado exitosamente",
+                                          tipo: TipoNotificacion.success,
+                                        );
+                                      } else {
+                                        Notificador.mostrar(
+                                          context: context,
+                                          mensaje: "No se pudo desvincular",
+                                          tipo: TipoNotificacion.success,
+                                        );
+                                      }
+                                    }
                                   }
-                                }
-                              }
+                                },
+                              );
                             },
                           ),
-                        if (userProvider.rol == 'admin')
                           IconButton(
                             icon: const Icon(Icons.edit, color: Colors.orange),
                             onPressed: () {
@@ -299,10 +333,23 @@ class _AnimalesPageState extends State<AnimalesPage> {
                               });
                             },
                           ),
-                        if (userProvider.rol == 'admin')
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () async {
+                              final tieneDispositivoAsignado =
+                                  asignacion != null &&
+                                  asignacion["imei"] != null;
+
+                              if (tieneDispositivoAsignado) {
+                                Notificador.mostrar(
+                                  context: context,
+                                  mensaje:
+                                      "Debes desvincular el collar antes de eliminar el animal",
+                                  tipo: TipoNotificacion.error,
+                                );
+                                return;
+                              }
+
                               final confirm = await showDialog<bool>(
                                 context: context,
                                 builder:
@@ -340,26 +387,31 @@ class _AnimalesPageState extends State<AnimalesPage> {
                                       ],
                                     ),
                               );
+
                               if (confirm == true) {
                                 final eliminado = await eliminarAnimal(
                                   animal.id!,
                                 );
                                 if (eliminado) {
                                   setState(() {});
+                                  Notificador.mostrar(
+                                    context: context,
+                                    mensaje: "Animal eliminado",
+                                    tipo: TipoNotificacion.success,
+                                  );
                                 } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        'Error al eliminar',
-                                        style: GoogleFonts.montserrat(),
-                                      ),
-                                    ),
+                                  Notificador.mostrar(
+                                    context: context,
+                                    mensaje:
+                                        "Error: no se pudo eliminar el animal",
+                                    tipo: TipoNotificacion.error,
                                   );
                                 }
                               }
                             },
                           ),
-                      ],
+                        ],
+                      ),
                     ),
                   );
                 },
@@ -368,28 +420,34 @@ class _AnimalesPageState extends State<AnimalesPage> {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF6A1B9A),
-        onPressed: () {
-          mostrarCrearAnimal(context, () {
-            // Esta función anónima se ejecuta solo si se creó exitosamente el animal
-            setState(() {});
-          });
-        },
-        child: const Icon(Icons.add, color: Colors.white),
+      floatingActionButton: SoloAdmin(
+        child: FloatingActionButton(
+          backgroundColor: const Color(0xFF6A1B9A),
+          onPressed: () {
+            mostrarCrearAnimal(context, () {
+              setState(() {});
+            });
+          },
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
       ),
     );
   }
 
   // FORMULARIOS
-  void mostrarAsignarDispositivo(BuildContext context, int idAnimal) {
+  void mostrarAsignarDispositivo(
+    BuildContext context,
+    int idAnimal,
+    VoidCallback onCargar,
+  ) {
     Dispositivo? dispositivoSeleccionado;
 
     showDialog(
       context: context,
       builder: (ctx) {
         return FutureBuilder<List<Dispositivo>>(
-          future: obtenerDispositivos(), // debe retornar solo los disponibles
+          future:
+              obtenerDispositivosDisponibles(), // debe retornar solo los disponibles
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const AlertDialog(
@@ -407,15 +465,11 @@ class _AnimalesPageState extends State<AnimalesPage> {
                 ),
               );
             }
-            final disponibles =
-                (snapshot.data ?? [])
-                    .where(
-                      (d) =>
-                          d.estadoActual == 'disponible' ||
-                          d.estadoActual == 'inactivo',
-                    )
-                    .toList();
-
+            final disponibles = snapshot.data ?? [];
+            print("DISPOSITIVOS DISPONIBLES:");
+            for (var d in disponibles) {
+              print("ID: ${d.id}, IMEI: ${d.imei}, Estado: ${d.estadoActual}");
+            }
             return StatefulBuilder(
               builder: (context, setState) {
                 return AlertDialog(
@@ -476,17 +530,18 @@ class _AnimalesPageState extends State<AnimalesPage> {
                           idAnimal,
                           dispositivoSeleccionado!.id!,
                         );
+                        onCargar();
                         Navigator.pop(context);
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
+                        Notificador.mostrar(
+                          context: context,
+                          mensaje:
                               exito
-                                  ? 'Dispositivo asignado correctamente'
-                                  : 'Error al asignar dispositivo',
-                              style: GoogleFonts.montserrat(),
-                            ),
-                          ),
+                                  ? "Dispositivo asignado correctamente"
+                                  : "Error al asignar dispositivo",
+                          tipo:
+                              exito
+                                  ? TipoNotificacion.success
+                                  : TipoNotificacion.error,
                         );
                       },
                       child: Text(
@@ -546,33 +601,41 @@ class _AnimalesPageState extends State<AnimalesPage> {
                         const SizedBox(height: 20),
 
                         campoBurbuja(
+                          context: context,
                           label: "Nombre",
                           controller: nombreController,
                           icon: Icons.pets,
                           validator: validarNombre,
                           colorIndex: 0,
+                          maxLength: 7,
                         ),
                         campoBurbuja(
+                          context: context,
                           label: "Especie",
                           controller: especieController,
                           icon: Icons.category,
                           validator: validarNombre,
                           colorIndex: 1,
+                          maxLength: 7,
                         ),
                         campoBurbuja(
+                          context: context,
                           label: "Edad",
                           controller: edadController,
                           icon: Icons.cake,
                           keyboardType: TextInputType.number,
                           validator: validarNumeros,
                           colorIndex: 2,
+                          maxLength: 3,
                         ),
                         campoBurbuja(
+                          context: context,
                           label: "Color",
                           controller: colorController,
                           icon: Icons.palette,
                           validator: validarNombre,
                           colorIndex: 1,
+                          maxLength: 7,
                         ),
 
                         const SizedBox(height: 20),
@@ -687,33 +750,41 @@ class _AnimalesPageState extends State<AnimalesPage> {
                       ),
                       const SizedBox(height: 20),
                       campoBurbuja(
+                        context: context,
                         label: "Nombre",
                         controller: nombreController,
                         icon: Icons.pets,
                         validator: validarNombre,
                         colorIndex: 1,
+                        maxLength: 10,
                       ),
                       campoBurbuja(
+                        context: context,
                         label: "Especie",
                         controller: especieController,
                         icon: Icons.pets_outlined,
                         validator: validarNombre,
                         colorIndex: 0,
+                        maxLength: 10,
                       ),
                       campoBurbuja(
+                        context: context,
                         label: "Edad",
                         controller: edadController,
                         icon: Icons.cake,
                         keyboardType: TextInputType.number,
                         validator: validarNumeros,
                         colorIndex: 2,
+                        maxLength: 3,
                       ),
                       campoBurbuja(
+                        context: context,
                         label: "Color",
                         controller: colorController,
                         icon: Icons.color_lens,
                         validator: validarNombre,
                         colorIndex: 1,
+                        maxLength: 6,
                       ),
                       const SizedBox(height: 20),
                       Row(
@@ -783,18 +854,22 @@ class _AnimalesPageState extends State<AnimalesPage> {
     );
   }
 
+  // Asegúrate de importar esto
+
   Widget campoBurbuja({
+    required BuildContext context,
     required String label,
     required TextEditingController controller,
     required IconData icon,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
-    int colorIndex = 0, // <- índice para alternar colores
+    int colorIndex = 0,
+    int maxLength = 50, // <-- parámetro opcional agregado
   }) {
     final List<Color> colores = [
-      const Color.fromRGBO(33, 150, 243, 1), // Azul
-      const Color(0xFF6A1B9A), // Morado
-      const Color.fromARGB(255, 214, 211, 151), // Amarillo
+      const Color.fromRGBO(33, 150, 243, 1),
+      const Color(0xFF6A1B9A),
+      const Color.fromARGB(255, 214, 211, 151),
     ];
     final iconColor = colores[colorIndex % colores.length];
 
@@ -812,12 +887,24 @@ class _AnimalesPageState extends State<AnimalesPage> {
         controller: controller,
         validator: validator,
         keyboardType: keyboardType,
+        inputFormatters: [LengthLimitingTextInputFormatter(maxLength)],
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon, color: iconColor),
           border: InputBorder.none,
           labelStyle: GoogleFonts.montserrat(),
+          counterText: '', // <-- Oculta el contador por defecto
         ),
+        onChanged: (value) {
+          if (value.length == maxLength) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Máximo 7 caracteres permitidos'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          }
+        },
       ),
     );
   }
