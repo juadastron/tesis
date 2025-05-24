@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'package:flutter_application_1/main.dart';
-import 'package:flutter_application_1/utils/notificador.dart';
 import 'package:http/http.dart' as http;
 import '../core/config.dart';
 import '../models/animal_model.dart';

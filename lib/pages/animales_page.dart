@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_application_1/services/asignacion_service.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:flutter_application_1/utils/notificador.dart';
-import 'package:flutter_application_1/utils/permiso_utils.dart';
 import 'package:flutter_application_1/widgets/solo_admin.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +14,6 @@ import '../services/animal_service.dart';
 import '../services/dispositivo_service.dart';
 import '../models/dispositivo_model.dart';
 import '../utils/validadores.dart';
-import 'package:flutter/services.dart';
 
 class AnimalesPage extends StatefulWidget {
   const AnimalesPage({super.key});
@@ -25,7 +23,39 @@ class AnimalesPage extends StatefulWidget {
 }
 
 class _AnimalesPageState extends State<AnimalesPage> {
+  bool _cargando = true;
+  List<Animal> _todosLosAnimales = [];
+  List<Animal> _animalesFiltrados = [];
+  final TextEditingController _busquedaController = TextEditingController();
   late UserProvider userProvider;
+
+  Future<void> _cargarAnimales() async {
+    final lista = await obtenerAnimales();
+    setState(() {
+      _todosLosAnimales = lista;
+      _animalesFiltrados = lista;
+      _cargando = false;
+    });
+  }
+
+  void _filtrarAnimales(String query) {
+    final input = query.toLowerCase();
+    setState(() {
+      _animalesFiltrados =
+          _todosLosAnimales
+              .where((animal) => animal.nombre.toLowerCase().contains(input))
+              .toList();
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _busquedaController.addListener(() {
+      _filtrarAnimales(_busquedaController.text);
+    });
+    _cargarAnimales();
+  }
 
   @override
   void didChangeDependencies() {
@@ -38,395 +68,84 @@ class _AnimalesPageState extends State<AnimalesPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Animales Registrados', style: GoogleFonts.montserrat()),
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: Colors.white,
         foregroundColor: const Color(0xFF6A1B9A),
       ),
-      body: FutureBuilder<List<Animal>>(
-        future: obtenerAnimales(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text(
-                'Error: ${snapshot.error}',
-                style: GoogleFonts.montserrat(),
-              ),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Text(
-                'No hay animales registrados.',
-                style: GoogleFonts.montserrat(),
-              ),
-            );
-          }
-
-          final animales = snapshot.data!;
-
-          return ListView.builder(
-            itemCount: animales.length,
-            itemBuilder: (context, index) {
-              final animal = animales[index];
-
-              return FutureBuilder<Map<String, dynamic>?>(
-                future: obtenerAsignacionAnimal(animal.id!),
-                builder: (context, asignacionSnapshot) {
-                  final asignacion = asignacionSnapshot.data;
-
-                  return ListTile(
-                    title: Text(
-                      animal.nombre,
-                      style: GoogleFonts.montserrat(
-                        fontWeight: FontWeight.bold,
+      body:
+          _cargando
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: TextField(
+                      controller: _busquedaController,
+                      decoration: InputDecoration(
+                        hintText: "Buscar por nombre...",
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: Color(0xFF6A1B9A),
+                        ),
+                        filled: true,
+                        fillColor: const Color(0xFFF8F5F9),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF6A1B9A),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF6A1B9A),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF6A1B9A),
+                            width: 2,
+                          ),
+                        ),
                       ),
+                      style: GoogleFonts.montserrat(),
                     ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.pets,
-                              size: 16,
-                              color: Colors.deepPurple,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Especie: ${animal.especie}',
-                              style: GoogleFonts.montserrat(fontSize: 13),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.cake,
-                              size: 16,
-                              color: Colors.deepPurple,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Edad: ${animal.edad ?? "N/D"}',
-                              style: GoogleFonts.montserrat(fontSize: 13),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.palette,
-                              size: 16,
-                              color: Colors.deepPurple,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'Color: ${animal.color ?? "N/D"}',
-                              style: GoogleFonts.montserrat(fontSize: 13),
-                            ),
-                          ],
-                        ),
-                        if (asignacion != null &&
-                            asignacion["imei"] != null &&
-                            asignacion["fecha_inicio"] != null) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            'Collar:',
-                            style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13,
-                              color: Colors.black87,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            margin: const EdgeInsets.only(top: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF2F2F2),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.grey.shade300),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.perm_device_info,
-                                  size: 16,
-                                  color: Colors.grey,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'IMEI: ${asignacion["imei"]}',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 12,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            margin: const EdgeInsets.only(top: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF2F2F2),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.grey.shade300),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(
-                                  Icons.date_range,
-                                  size: 16,
-                                  color: Colors.grey,
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Desde: ${asignacion["fecha_inicio"].toString().split(" ")[0]}',
-                                  style: GoogleFonts.montserrat(
-                                    fontSize: 12,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    trailing: SoloAdmin(
-                      child: Wrap(
-                        spacing: 8,
-                        children: [
-                          Builder(
-                            builder: (context) {
-                              final tieneAsignacionValida =
-                                  asignacion != null &&
-                                  asignacion["imei"] != null &&
-                                  asignacion["fecha_inicio"] != null;
-
-                              return IconButton(
-                                icon:
-                                    !tieneAsignacionValida
-                                        ? const Icon(
-                                          Icons.link,
-                                          color: Colors.green,
-                                        )
-                                        : const Icon(
-                                          Icons.link_off,
-                                          color: Colors.redAccent,
-                                        ),
-                                tooltip:
-                                    !tieneAsignacionValida
-                                        ? 'Asignar dispositivo'
-                                        : 'Desvincular dispositivo',
-                                onPressed: () async {
-                                  if (!tieneAsignacionValida) {
-                                    mostrarAsignarDispositivo(
-                                      context,
-                                      animal.id!,
-                                      () {
-                                        setState(
-                                          () {},
-                                        ); // 👈 Esto fuerza a que se reconstruyan los FutureBuilder
-                                      },
-                                    );
-                                  } else {
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder:
-                                          (ctx) => AlertDialog(
-                                            title: Text(
-                                              'Desvincular Collar',
-                                              style: GoogleFonts.montserrat(),
-                                            ),
-                                            content: Text(
-                                              '¿Deseas desvincular el dispositivo de este animal?',
-                                              style: GoogleFonts.montserrat(),
-                                            ),
-                                            actions: [
-                                              TextButton(
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      ctx,
-                                                      false,
-                                                    ),
-                                                child: Text(
-                                                  'Cancelar',
-                                                  style:
-                                                      GoogleFonts.montserrat(),
-                                                ),
-                                              ),
-                                              ElevatedButton(
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: const Color(
-                                                    0xFF6A1B9A,
-                                                  ),
-                                                ),
-                                                onPressed:
-                                                    () => Navigator.pop(
-                                                      ctx,
-                                                      true,
-                                                    ),
-                                                child: Text(
-                                                  'Desvincular',
-                                                  style: GoogleFonts.montserrat(
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                    );
-                                    if (confirm == true) {
-                                      final idAsignacion =
-                                          asignacion["id_asignacion"];
-                                      if (idAsignacion == null) {
-                                        Notificador.mostrar(
-                                          context: context,
-                                          mensaje:
-                                              "Este collar no tiene asignación activa",
-                                          tipo: TipoNotificacion.error,
-                                        );
-                                        return;
-                                      }
-                                      final exito =
-                                          await desvincularDispositivoAnimal(
-                                            idAsignacion,
-                                          );
-                                      if (exito) {
-                                        setState(() {});
-                                        Notificador.mostrar(
-                                          context: context,
-                                          mensaje:
-                                              "Dispositivo desviculado exitosamente",
-                                          tipo: TipoNotificacion.success,
-                                        );
-                                      } else {
-                                        Notificador.mostrar(
-                                          context: context,
-                                          mensaje: "No se pudo desvincular",
-                                          tipo: TipoNotificacion.success,
-                                        );
-                                      }
-                                    }
-                                  }
-                                },
-                              );
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.orange),
-                            onPressed: () {
-                              mostrarEditarAnimal(context, animal, () {
-                                setState(() {});
-                              });
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () async {
-                              final tieneDispositivoAsignado =
-                                  asignacion != null &&
-                                  asignacion["imei"] != null;
-
-                              if (tieneDispositivoAsignado) {
-                                Notificador.mostrar(
-                                  context: context,
-                                  mensaje:
-                                      "Debes desvincular el collar antes de eliminar el animal",
-                                  tipo: TipoNotificacion.error,
+                  ),
+                  Expanded(
+                    child:
+                        _animalesFiltrados.isEmpty
+                            ? Center(
+                              child: Text(
+                                'No hay animales registrados.',
+                                style: GoogleFonts.montserrat(),
+                              ),
+                            )
+                            : ListView.builder(
+                              itemCount: _animalesFiltrados.length,
+                              itemBuilder: (context, index) {
+                                final animal = _animalesFiltrados[index];
+                                return FutureBuilder<Map<String, dynamic>?>(
+                                  future: obtenerAsignacionAnimal(animal.id!),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {}
+                                    final asignacion = snapshot.data;
+                                    return _buildAnimalTile(animal, asignacion);
+                                  },
                                 );
-                                return;
-                              }
-
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder:
-                                    (ctx) => AlertDialog(
-                                      title: Text(
-                                        'Eliminar Animal',
-                                        style: GoogleFonts.montserrat(),
-                                      ),
-                                      content: Text(
-                                        '¿Deseas eliminar este animal?',
-                                        style: GoogleFonts.montserrat(),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed:
-                                              () => Navigator.pop(ctx, false),
-                                          child: Text(
-                                            'Cancelar',
-                                            style: GoogleFonts.montserrat(),
-                                          ),
-                                        ),
-                                        ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.red,
-                                          ),
-                                          onPressed:
-                                              () => Navigator.pop(ctx, true),
-                                          child: Text(
-                                            'Eliminar',
-                                            style: GoogleFonts.montserrat(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                              );
-
-                              if (confirm == true) {
-                                final eliminado = await eliminarAnimal(
-                                  animal.id!,
-                                );
-                                if (eliminado) {
-                                  setState(() {});
-                                  Notificador.mostrar(
-                                    context: context,
-                                    mensaje: "Animal eliminado",
-                                    tipo: TipoNotificacion.success,
-                                  );
-                                } else {
-                                  Notificador.mostrar(
-                                    context: context,
-                                    mensaje:
-                                        "Error: no se pudo eliminar el animal",
-                                    tipo: TipoNotificacion.error,
-                                  );
-                                }
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
-      ),
+                              },
+                            ),
+                  ),
+                ],
+              ),
       floatingActionButton: SoloAdmin(
         child: FloatingActionButton(
           backgroundColor: const Color(0xFF6A1B9A),
           onPressed: () {
-            mostrarCrearAnimal(context, () {
-              setState(() {});
-            });
+            mostrarCrearAnimal(context, () => _cargarAnimales());
           },
           child: const Icon(Icons.add, color: Colors.white),
         ),
@@ -556,6 +275,110 @@ class _AnimalesPageState extends State<AnimalesPage> {
           },
         );
       },
+    );
+  }
+
+  Widget _buildAnimalTile(Animal animal, Map<String, dynamic>? asignacion) {
+    return ListTile(
+      title: Text(
+        animal.nombre,
+        style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+      ),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Icons.pets, size: 16, color: Colors.deepPurple),
+              const SizedBox(width: 6),
+              Text(
+                'Especie: ${animal.especie}',
+                style: GoogleFonts.montserrat(fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Icons.cake, size: 16, color: Colors.deepPurple),
+              const SizedBox(width: 6),
+              Text(
+                'Edad: ${animal.edad ?? "N/D"}',
+                style: GoogleFonts.montserrat(fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              const Icon(Icons.palette, size: 16, color: Colors.deepPurple),
+              const SizedBox(width: 6),
+              Text(
+                'Color: ${animal.color ?? "N/D"}',
+                style: GoogleFonts.montserrat(fontSize: 13),
+              ),
+            ],
+          ),
+          if (asignacion != null &&
+              asignacion["imei"] != null &&
+              asignacion["fecha_inicio"] != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'Collar:',
+              style: GoogleFonts.montserrat(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2F2F2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.perm_device_info,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'IMEI: ${asignacion["imei"]}',
+                    style: GoogleFonts.montserrat(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              margin: const EdgeInsets.only(top: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2F2F2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.date_range, size: 16, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Desde: ${asignacion["fecha_inicio"].toString().split(" ")[0]}',
+                    style: GoogleFonts.montserrat(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+      trailing: _buildAcciones(animal, asignacion),
     );
   }
 
@@ -851,6 +674,178 @@ class _AnimalesPageState extends State<AnimalesPage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAcciones(Animal animal, Map<String, dynamic>? asignacion) {
+    final tieneAsignacionValida =
+        asignacion != null &&
+        asignacion["imei"] != null &&
+        asignacion["fecha_inicio"] != null;
+
+    return SoloAdmin(
+      child: Wrap(
+        spacing: 8,
+        children: [
+          IconButton(
+            icon: Icon(
+              tieneAsignacionValida ? Icons.link_off : Icons.link,
+              color: tieneAsignacionValida ? Colors.redAccent : Colors.green,
+            ),
+            tooltip:
+                tieneAsignacionValida
+                    ? 'Desvincular dispositivo'
+                    : 'Asignar dispositivo',
+            onPressed: () async {
+              if (!tieneAsignacionValida) {
+                mostrarAsignarDispositivo(
+                  context,
+                  animal.id!,
+                  () => setState(() {}),
+                );
+              } else {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder:
+                      (ctx) => AlertDialog(
+                        title: Text(
+                          'Desvincular Collar',
+                          style: GoogleFonts.montserrat(),
+                        ),
+                        content: Text(
+                          '¿Deseas desvincular el dispositivo de este animal?',
+                          style: GoogleFonts.montserrat(),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: Text(
+                              'Cancelar',
+                              style: GoogleFonts.montserrat(),
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF6A1B9A),
+                            ),
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: Text(
+                              'Desvincular',
+                              style: GoogleFonts.montserrat(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                );
+                if (confirm == true) {
+                  final idAsignacion = asignacion?["id_asignacion"];
+                  if (idAsignacion == null) {
+                    Notificador.mostrar(
+                      context: context,
+                      mensaje: "Este collar no tiene asignación activa",
+                      tipo: TipoNotificacion.error,
+                    );
+                    return;
+                  }
+                  final exito = await desvincularDispositivoAnimal(
+                    idAsignacion,
+                  );
+                  if (exito) {
+                    setState(() {});
+                    Notificador.mostrar(
+                      context: context,
+                      mensaje: "Dispositivo desvinculado exitosamente",
+                      tipo: TipoNotificacion.success,
+                    );
+                  } else {
+                    Notificador.mostrar(
+                      context: context,
+                      mensaje: "No se pudo desvincular",
+                      tipo: TipoNotificacion.error,
+                    );
+                  }
+                }
+              }
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.edit, color: Colors.orange),
+            onPressed: () {
+              mostrarEditarAnimal(context, animal, () {
+                _cargarAnimales(); // 👈 Recarga desde la API los animales actualizados
+              });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            onPressed: () async {
+              final tieneDispositivoAsignado =
+                  asignacion != null && asignacion["imei"] != null;
+              if (tieneDispositivoAsignado) {
+                Notificador.mostrar(
+                  context: context,
+                  mensaje:
+                      "Debes desvincular el collar antes de eliminar el animal",
+                  tipo: TipoNotificacion.error,
+                );
+                return;
+              }
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder:
+                    (ctx) => AlertDialog(
+                      title: Text(
+                        'Eliminar Animal',
+                        style: GoogleFonts.montserrat(),
+                      ),
+                      content: Text(
+                        '¿Deseas eliminar este animal?',
+                        style: GoogleFonts.montserrat(),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: Text(
+                            'Cancelar',
+                            style: GoogleFonts.montserrat(),
+                          ),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                          ),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: Text(
+                            'Eliminar',
+                            style: GoogleFonts.montserrat(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+              );
+              if (confirm == true) {
+                final eliminado = await eliminarAnimal(animal.id!);
+                if (eliminado) {
+                  setState(() {});
+                  Notificador.mostrar(
+                    context: context,
+                    mensaje: "Animal eliminado",
+                    tipo: TipoNotificacion.success,
+                  );
+                } else {
+                  Notificador.mostrar(
+                    context: context,
+                    mensaje: "Error: no se pudo eliminar el animal",
+                    tipo: TipoNotificacion.error,
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 
