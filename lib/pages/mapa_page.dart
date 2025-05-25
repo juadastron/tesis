@@ -239,8 +239,8 @@ class _MapaPageState extends State<MapaPage> {
                                 child: Text(
                                   d['nombre_animal'] != null &&
                                           d['especie_animal'] != null
-                                      ? '${d['nombre_animal']} (${d['especie_animal']})'
-                                      : d['imei'] ?? 'Dispositivo',
+                                      ? '${d['nombre_animal']} (${d['especie_animal']}) - Collar ${d['id_dispositivo']}'
+                                      : 'Dispositivo - ID ${d['id_dispositivo']}',
                                 ),
                               );
                             }).toList(),

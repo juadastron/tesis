@@ -740,7 +740,7 @@ class _AnimalesPageState extends State<AnimalesPage> {
                       ),
                 );
                 if (confirm == true) {
-                  final idAsignacion = asignacion?["id_asignacion"];
+                  final idAsignacion = asignacion["id_asignacion"];
                   if (idAsignacion == null) {
                     Notificador.mostrar(
                       context: context,
@@ -891,7 +891,7 @@ class _AnimalesPageState extends State<AnimalesPage> {
           counterText: '', // <-- Oculta el contador por defecto
         ),
         onChanged: (value) {
-          if (value.length == maxLength) {
+          if (value.length > maxLength) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Máximo 7 caracteres permitidos'),
