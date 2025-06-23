@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/MapaZonaPage.dart';
+import 'package:flutter_application_1/utils/notificador.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/configuracion_mqtt_service.dart';
 import '../models/configuracion_dispositivo.dart';
@@ -87,9 +88,14 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
 
   Future<void> guardarConfiguracion() async {
     if (imeiDispositivo == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("❌ Error: IMEI no disponible")),
+      Notificador.mostrar(
+        context: context,
+        mensaje: "❌ Error: IMEI no disponible",
+        tipo: TipoNotificacion.success,
       );
+      /*ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("❌ Error: IMEI no disponible")),
+      );*/
       return;
     }
     final nuevaConfig = ConfiguracionDispositivo(
@@ -112,11 +118,15 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
 
     final ok = await configService.guardarConfiguracion(nuevaConfig);
     if (ok) {
-      ScaffoldMessenger.of(
+      /*ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("✅ Configuración guardada")));
-
-      // ✅ Llamar al service que publica al A9G por MQTT
+      ).showSnackBar(const SnackBar(content: Text("✅ Configuración guardada")));*/
+      Notificador.mostrar(
+        context: context,
+        mensaje: "Configuración guardada",
+        tipo: TipoNotificacion.success,
+      );
+      // Llamar al service que publica al A9G por MQTT
       await mqttService.enviarConfiguracion(nuevaConfig);
     }
   }
@@ -141,6 +151,10 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.purple, // Color morado del botón
+                    foregroundColor: Colors.white,
+                  ),
                   child: const Text("Sí"),
                 ),
               ],
@@ -159,17 +173,27 @@ class _ConfiguracionPageState extends State<ConfiguracionPage> {
     final response = await zonaService.crearZonaConRespuesta(zona);
 
     if (response['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("📍 Zona segura registrada")),
+      Notificador.mostrar(
+        context: context,
+        mensaje: "📍 Zona segura registrada",
+        tipo: TipoNotificacion.success,
       );
+      /* ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Zona segura registrada")),
+      );*/
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
+      Notificador.mostrar(
+        context: context,
+        mensaje: "❌ Error: ${response['error'] ?? ''}",
+        tipo: TipoNotificacion.error,
+      );
+      /*ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "❌ Error: ${response['error'] ?? 'Verifica las coordenadas en Google Maps'}",
+            "❌ Error: ${response['error'] ?? ''}",
           ),
         ),
-      );
+      );*/
     }
     await cargarZona();
   }

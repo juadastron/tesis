@@ -96,7 +96,7 @@ Future<bool> eliminarDispositivo(int idDispositivo) async {
   return data["success"] == true;
 }
 
-// ✅ NUEVO: Crear y configurar automáticamente
+// Crear y configurar automáticamente
 Future<Dispositivo?> crearDispositivoYConfigurar(
   Dispositivo dispositivo,
   int idUsuario,

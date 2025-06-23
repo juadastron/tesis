@@ -28,7 +28,16 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   NotificacionesService.navigatorKey = navigatorKey;
+
+
   await NotificacionesService.initializeFCM();
+
+  // 🆕 Manejar si la app fue abierta desde una notificación
+  RemoteMessage? initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+  if (initialMessage != null) {
+    print("🚀 App abierta desde notificación: ${initialMessage.notification?.title}");
+    navigatorKey.currentState?.pushNamed('/mapa');
+  }
 
   runApp(
     MultiProvider(
@@ -75,6 +84,10 @@ class MyApp extends StatelessWidget {
                   (_) =>
                       ConfiguracionPage(idDispositivo: args?['idDispositivo']),
             );
+
+          case '/splash':
+            return MaterialPageRoute(builder: (_) => const SplashScreen());
+
           default:
             return MaterialPageRoute(
               builder:

@@ -6,7 +6,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_application_1/core/config.dart';
 
-
 class NotificacionesService {
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   static const String apiUrl = '${baseUrl}usuarios.php';
@@ -52,19 +51,22 @@ class NotificacionesService {
     } catch (e) {
       print('⚠️ Error al suscribirse al topic: $e');
     }
-
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      print('📲 Notificación en primer plano: ${message.notification?.title}');
-
       final context = navigatorKey.currentContext;
-      if (context != null && message.notification != null) {
+
+      // Extrae primero de `message.data`, si no hay, intenta desde `message.notification`
+      final titulo =
+          message.data['title'] ?? message.notification?.title ?? 'Sin título';
+      final mensaje = message.data['body'] ?? message.notification?.body ?? '';
+
+      if (context != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              message.notification!.title ?? 'Notificación',
-              style: const TextStyle(fontSize: 16),
+              '$titulo → \n$mensaje',
+              style: const TextStyle(fontSize: 15),
             ),
-            duration: const Duration(seconds: 3),
+            duration: const Duration(seconds: 9),
           ),
         );
       }
@@ -72,8 +74,12 @@ class NotificacionesService {
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
       print('📬 Notificación abierta: ${message.notification?.title}');
-    });
 
+      final context = navigatorKey.currentContext;
+      if (context != null) {
+        navigatorKey.currentState?.pushNamed('/mapa');
+      }
+    });
     FirebaseMessaging.onBackgroundMessage(_backgroundHandler);
   }
 

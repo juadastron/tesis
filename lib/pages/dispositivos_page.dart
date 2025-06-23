@@ -220,6 +220,12 @@ class _DispositivosPageState extends State<DispositivosPage> {
                                                   dispositivo.id!,
                                                 );
                                             if (ok) cargarDispositivos();
+                                            Notificador.mostrar(
+                                              context: context,
+                                              mensaje:
+                                                  "Dispositivo eliminado correctamente",
+                                              tipo: TipoNotificacion.success,
+                                            );
                                           }
                                         }
                                       },
@@ -340,7 +346,7 @@ class _DispositivosPageState extends State<DispositivosPage> {
         icono = Icons.warning_amber_rounded;
         color = Colors.red;
         break;
-      case 'inactividad':
+      case 'inactivo':
         icono = Icons.access_time;
         color = Colors.orange;
         break;
@@ -433,7 +439,7 @@ class _DispositivosPageState extends State<DispositivosPage> {
                       icon: Icons.phone_android,
                       validator: validarNumeroCelularEcuador,
                       colorIndex: 0,
-                      maxLength: 11,
+                      maxLength: 10,
                     ),
                     const SizedBox(height: 20),
                     campoBurbuja(
@@ -567,7 +573,7 @@ class _DispositivosPageState extends State<DispositivosPage> {
                       icon: Icons.phone_android,
                       validator: validarNumeroCelularEcuador,
                       colorIndex: 0,
-                      maxLength: 11,
+                      maxLength: 10,
                     ),
                     const SizedBox(height: 20),
                     campoBurbuja(
@@ -700,7 +706,7 @@ class _DispositivosPageState extends State<DispositivosPage> {
           if (value.length == maxLength) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Máximo 7 caracteres permitidos'),
+                content: Text('Máximo 10 caracteres permitidos'),
                 duration: Duration(seconds: 1),
               ),
             );

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/pages/splash_screen.dart';
 import 'package:flutter_application_1/providers/user_provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -243,12 +242,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 rol: rol,
                               );
 
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const SplashScreen(),
-                                ),
-                              );
+                              Navigator.pushReplacementNamed(context, '/splash');
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(

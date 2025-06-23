@@ -57,6 +57,12 @@ Future<bool> eliminarUsuario(int id) async {
     body: "id_usuario=$id",
   );
 
-  final resultado = jsonDecode(response.body);
-  return resultado["success"] == true;
+  try {
+    final resultado = jsonDecode(response.body);
+    return resultado["success"] == true;
+  } catch (e) {
+    print("ERROR DECODIFICANDO: $e");
+    print("BODY → ${response.body}");
+    return false;
+  }
 }
