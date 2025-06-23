@@ -59,8 +59,6 @@ class NotificacionesService {
           message.data['title'] ?? message.notification?.title ?? 'Sin título';
       final mensaje = message.data['body'] ?? message.notification?.body ?? '';
 
-      print("🔥 Datos recibidos: ${message.data}");
-      print("🔥 Datos recibidos de message.nmotificatio: ${message.notification?.body}");
       if (context != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
