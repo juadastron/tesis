@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/foundation.dart';
 import '../utils/distancia.dart';
+import '../services/mqtt_listener_service.dart';
 
 BitmapDescriptor? _iconoPatita;
 
@@ -23,6 +24,7 @@ class MapaPage extends StatefulWidget {
 class _MapaPageState extends State<MapaPage> {
   double? _ultimaDistanciaKm;
   GoogleMapController? _mapController;
+  final _mqtt = MqttListenerService();
   Set<Marker> _marcadores = {};
   Set<Polyline> _polilineas = {};
   List<dynamic> _dispositivos = [];
@@ -39,6 +41,7 @@ class _MapaPageState extends State<MapaPage> {
   void initState() {
     super.initState();
     _cargarIcono().then((_) => _cargarDispositivos());
+    _escucharUbicacionesEnTiempoReal();
   }
 
   Future<void> _cargarIcono() async {
@@ -56,10 +59,18 @@ class _MapaPageState extends State<MapaPage> {
         _dispositivos = dispositivosAsignados;
         _marcadores =
             _dispositivos.map((d) {
+              print(
+                '📍 Coordenadas del dispositivo ${d['id_dispositivo']}: '
+                'lat=${d['latitud']}, lng=${d['longitud']}',
+              );
               return Marker(
                 markerId: MarkerId(d['id_dispositivo'].toString()),
-                position: LatLng(d['latitud'], d['longitud']),
+                position: LatLng(
+                  double.parse(d['latitud'].toString()),
+                  double.parse(d['longitud'].toString()),
+                ),
                 icon: _iconoPatita ?? BitmapDescriptor.defaultMarker,
+                anchor: const Offset(0.5, 1.0),
                 infoWindow: InfoWindow(
                   title:
                       d['nombre_animal'] != null && d['especie_animal'] != null
@@ -75,6 +86,34 @@ class _MapaPageState extends State<MapaPage> {
       print("Error al cargar dispositivos: $e");
     }
   }
+
+  void _escucharUbicacionesEnTiempoReal() async {
+  await _mqtt.conectar();
+  _mqtt.onUbicacionRecibida = (data) {
+    final id = data['id_dispositivo'].toString();
+    final nuevaLat = double.tryParse(data['latitud'].toString());
+    final nuevaLng = double.tryParse(data['longitud'].toString());
+
+    if (nuevaLat == null || nuevaLng == null) return;
+
+    setState(() {
+      _marcadores.removeWhere((m) => m.markerId.value == id);
+      _marcadores.add(Marker(
+        markerId: MarkerId(id),
+        position: LatLng(nuevaLat, nuevaLng),
+        icon: _iconoPatita ?? BitmapDescriptor.defaultMarker,
+        infoWindow: InfoWindow(title: 'Actualizado'),
+      ));
+
+      // Actualiza también _dispositivos si lo usas en otras vistas
+      final index = _dispositivos.indexWhere((d) => d['id_dispositivo'].toString() == id);
+      if (index != -1) {
+        _dispositivos[index]['latitud'] = nuevaLat;
+        _dispositivos[index]['longitud'] = nuevaLng;
+      }
+    });
+  };
+}
 
   void _centrarEnDispositivo(String idDispositivo) {
     final dispositivo = _dispositivos.firstWhere(

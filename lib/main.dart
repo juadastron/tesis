@@ -68,7 +68,7 @@ class MyApp extends StatelessWidget {
           case '/home':
             return MaterialPageRoute(builder: (_) => const HomePage());
           case '/usuarios':
-            return MaterialPageRoute(builder: (_) => const UsuariosPage());
+            return MaterialPageRoute(builder: (_) => const UsuariosPage()); 
           case '/animales':
             return MaterialPageRoute(builder: (_) => const AnimalesPage());
           case '/dispositivos':

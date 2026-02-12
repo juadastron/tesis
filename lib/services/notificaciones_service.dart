@@ -44,7 +44,8 @@ class NotificacionesService {
     final fcmToken = await _messaging.getToken();
     print('🔑 Token FCM: $fcmToken');
 
-    // ✅ Suscribirse al topic "todos"
+    // Suscribirse al topic "todos"
+    // 
     try {
       await _messaging.subscribeToTopic("todos");
       print('📌 Suscrito al topic "todos"');
