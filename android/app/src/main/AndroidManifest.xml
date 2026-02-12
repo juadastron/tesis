@@ -2,7 +2,7 @@
 package="com.geolittlepaws.app">
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application
-        android:label="flutter_application_1"
+        android:label="Geo little paws"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

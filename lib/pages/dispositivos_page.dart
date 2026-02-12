@@ -338,6 +338,10 @@ class _DispositivosPageState extends State<DispositivosPage> {
     late Color color;
 
     switch (estado) {
+      case 'salvo':
+        icono = Icons.check_circle_outline;
+        color = Colors.green;
+        break;
       case 'asignado':
         icono = Icons.lock;
         color = Color(0xFF6A1B9A); // morado
@@ -352,7 +356,7 @@ class _DispositivosPageState extends State<DispositivosPage> {
         break;
       default:
         icono = Icons.check_circle;
-        color = Colors.green;
+        color = const Color.fromARGB(255, 17, 81, 219);
     }
 
     return _buildEtiquetaIcono(
